@@ -1,4 +1,5 @@
 import { Octokit } from '@octokit/rest';
+import { applySeoTemplates } from './templatePatchService.js';
 
 function parseRepo(repoInput) {
   const trimmed = repoInput.trim().replace(/^https:\/\/github\.com\//i, '').replace(/\.git$/, '');
@@ -26,6 +27,9 @@ async function getFileContent(octokit, owner, repo, path, ref) {
 }
 
 function applyPatch(existingContent, patch) {
+  if (patch.mode === 'template') {
+    return applySeoTemplates(existingContent, patch.auditData);
+  }
   if (patch.content) {
     return patch.content;
   }
@@ -67,7 +71,9 @@ export async function pushSeoPatches({ token, repo, branch = 'main', patches }) 
     const existing = await getFileContent(octokit, owner, repoName, patch.path, branch);
     const newContent = existing
       ? applyPatch(existing.content, patch)
-      : patch.content || (() => { throw new Error(`Cannot create ${patch.path} without full content`); })();
+      : patch.fallbackContent || patch.content || (() => {
+          throw new Error(`Cannot create ${patch.path} without template fallback`);
+        })();
 
     const { data: blob } = await octokit.git.createBlob({
       owner,

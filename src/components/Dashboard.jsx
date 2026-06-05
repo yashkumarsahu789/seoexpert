@@ -71,7 +71,6 @@ export default function Dashboard() {
 
   const [githubToken, setGithubToken] = useState('');
   const [githubRepo, setGithubRepo] = useState('yashkumarsahu789/seoexpert');
-  const [aiApiKey, setAiApiKey] = useState('');
   const [patchLoading, setPatchLoading] = useState(false);
   const [patchResult, setPatchResult] = useState(null);
   const [patchError, setPatchError] = useState(null);
@@ -111,7 +110,6 @@ export default function Dashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           auditData,
-          apiKey: aiApiKey,
           token: githubToken,
           repo: githubRepo,
           branch: 'main',
@@ -156,7 +154,7 @@ export default function Dashboard() {
               Analyze Your Web Ecosystem
             </h2>
             <p className="mb-10 text-slate-400">
-              Detect tech stack, run SEO audits, and auto-patch with AI — no paid APIs required.
+              Detect tech stack, run SEO audits, and auto-patch with instant templates — 100% free, no API keys.
             </p>
 
             <form onSubmit={handleAnalyze} className="flex flex-col gap-3 sm:flex-row">
@@ -301,34 +299,23 @@ export default function Dashboard() {
             <section className="rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-950/40 to-slate-900/40 p-6">
               <div className="mb-5 flex items-center gap-2">
                 <Rocket className="h-5 w-5 text-emerald-400" />
-                <h3 className="text-lg font-semibold">AI Auto-Fix & Deploy</h3>
+                <h3 className="text-lg font-semibold">Template Auto-Fix & Deploy</h3>
               </div>
+              <p className="mb-5 text-sm text-slate-400">
+                Missing meta tags are filled instantly from URL templates — no AI, no wait, no rate limits.
+              </p>
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-slate-500">
-                    GitHub Repository (owner/repo)
-                  </label>
-                  <input
-                    type="text"
-                    value={githubRepo}
-                    onChange={(e) => setGithubRepo(e.target.value)}
-                    placeholder="owner/repo"
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950/60 px-4 py-3 text-sm outline-none focus:border-emerald-500/50"
-                  />
-                </div>
-                <div>
-                  <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-slate-500">
-                    Google AI Studio API Key
-                  </label>
-                  <input
-                    type="password"
-                    value={aiApiKey}
-                    onChange={(e) => setAiApiKey(e.target.value)}
-                    placeholder="AIza…"
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950/60 px-4 py-3 text-sm outline-none focus:border-emerald-500/50"
-                  />
-                </div>
+              <div>
+                <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-slate-500">
+                  GitHub Repository (owner/repo)
+                </label>
+                <input
+                  type="text"
+                  value={githubRepo}
+                  onChange={(e) => setGithubRepo(e.target.value)}
+                  placeholder="owner/repo"
+                  className="w-full rounded-xl border border-slate-700 bg-slate-950/60 px-4 py-3 text-sm outline-none focus:border-emerald-500/50"
+                />
               </div>
 
               <div className="mt-4">
@@ -347,7 +334,7 @@ export default function Dashboard() {
               <button
                 type="button"
                 onClick={handlePatchDeploy}
-                disabled={patchLoading || !githubToken || !aiApiKey || !githubRepo}
+                disabled={patchLoading || !githubToken || !githubRepo}
                 className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-8 py-4 text-base font-bold text-slate-950 transition hover:from-emerald-400 hover:to-teal-400 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
               >
                 {patchLoading ? (
@@ -358,7 +345,7 @@ export default function Dashboard() {
                 ) : (
                   <>
                     <Rocket className="h-5 w-5" />
-                    Authorize AI Patch & Deploy
+                    Authorize Patch & Deploy
                   </>
                 )}
               </button>

@@ -15,7 +15,6 @@
     "logs": "firebase functions:log"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
     "@octokit/rest": "^21.1.1",
     "chrome-launcher": "^1.1.2",
     "cors": "^2.8.5",

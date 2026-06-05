@@ -2,7 +2,7 @@ import { onRequest } from 'firebase-functions/v2/https';
 import express from 'express';
 import cors from 'cors';
 import { auditWebsite } from './services/auditService.js';
-import { generateSeoPatches } from './services/aiService.js';
+import { generateSeoPatches } from './services/templatePatchService.js';
 import { pushSeoPatches } from './services/githubService.js';
 import { formatAuditForAI } from './services/auditFormatter.js';
 
@@ -29,9 +29,9 @@ app.post('/api/audit', async (req, res) => {
 
 app.post('/api/generate-patch', async (req, res) => {
   try {
-    const { auditData, apiKey } = req.body;
+    const { auditData } = req.body;
     if (!auditData) return res.status(400).json({ error: 'auditData is required' });
-    const patches = await generateSeoPatches(auditData, apiKey);
+    const patches = generateSeoPatches(auditData);
     return res.json(patches);
   } catch (err) {
     return res.status(500).json({ error: err.message || 'Patch generation failed' });
@@ -50,16 +50,15 @@ app.post('/api/patch-code', async (req, res) => {
 
 app.post('/api/orchestrate', async (req, res) => {
   try {
-    const { auditData, apiKey, token, repo, branch = 'main' } = req.body;
+    const { auditData, token, repo, branch = 'main' } = req.body;
     if (!auditData) return res.status(400).json({ error: 'auditData is required' });
-    if (!apiKey) return res.status(400).json({ error: 'Google AI API key is required' });
     if (!token) return res.status(400).json({ error: 'GitHub PAT is required' });
     if (!repo) return res.status(400).json({ error: 'Repository is required' });
 
     const auditSummary = formatAuditForAI(auditData);
-    const patchResult = await generateSeoPatches(auditData, apiKey);
+    const patchResult = generateSeoPatches(auditData);
     if (!patchResult.patches?.length) {
-      return res.status(422).json({ error: 'AI did not generate any patches', auditSummary, patchResult });
+      return res.status(422).json({ error: 'No template fixes needed for this audit', auditSummary, patchResult });
     }
     const deployResult = await pushSeoPatches({ token, repo, branch, patches: patchResult.patches });
     return res.json({ success: true, auditSummary, patchResult, deployResult });
