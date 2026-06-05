@@ -1,0 +1,35 @@
+{
+  "name": "seoexpert",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:client": "vite",
+    "dev:server": "npm run dev --prefix server",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "start:server": "npm start --prefix server"
+  },
+  "dependencies": {
+    "firebase": "^11.6.0",
+    "lucide-react": "^0.487.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@tailwindcss/vite": "^4.1.4",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "concurrently": "^9.1.2",
+    "eslint": "^10.3.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "globals": "^17.6.0",
+    "tailwindcss": "^4.1.4",
+    "vite": "^8.0.12"
+  }
+}
