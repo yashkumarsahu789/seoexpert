@@ -46,9 +46,14 @@ No AI key. No network call. Instant patch → GitHub push.
 
 https://yashkumarsahu789.github.io/seoexpert/
 
-Deploys automatically on push to `main` via GitHub Actions.
+### One-time GitHub setup (required)
 
-**One-time setup:** Repo → Settings → Pages → Build and deployment → Source: **GitHub Actions**
+1. Open **Settings → Pages**
+2. **Build and deployment → Source:** choose **Deploy from a branch**
+3. **Branch:** `gh-pages` / **`/ (root)`**
+4. Save, then push to `main` or run **Actions → Deploy GitHub Pages → Run workflow**
+
+The site must NOT deploy from `main` branch root — that serves raw source and shows a blank page.
 
 ## Firebase Deploy
 
