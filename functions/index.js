@@ -7,7 +7,23 @@ import { pushSeoPatches } from './services/githubService.js';
 import { formatAuditForAI } from './services/auditFormatter.js';
 
 const app = express();
-app.use(cors({ origin: true }));
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'https://yashkumarsahu789.github.io',
+];
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.some((allowed) => origin.startsWith(allowed))) {
+        callback(null, true);
+        return;
+      }
+      callback(null, true);
+    },
+  })
+);
 app.use(express.json({ limit: '2mb' }));
 
 app.get('/api/health', (_req, res) => {
