@@ -16,20 +16,28 @@ function deriveSiteName(url) {
   }
 }
 
+function attrEquals(value, expected) {
+  return String(value || '').trim().toLowerCase() === expected.toLowerCase();
+}
+
 export function buildHtmlSignals(html = '') {
-  const lower = html.toLowerCase();
+  const doc = new DOMParser().parseFromString(html, 'text/html');
 
   const hasSchema =
-    lower.includes('application/ld+json') || lower.includes('schema.org');
+    doc.querySelector('script[type="application/ld+json"]') !== null ||
+    doc.querySelector('[itemscope][itemtype]') !== null ||
+    /schema\.org/i.test(html);
 
-  const hasLazyLoading = lower.includes('loading="lazy"') || lower.includes("loading='lazy'");
-  const hasWebP = lower.includes('.webp');
+  const images = [...doc.querySelectorAll('img')];
+  const hasLazyLoading = images.some((img) => attrEquals(img.getAttribute('loading'), 'lazy'));
+  const hasWebP = images.some((img) => /\.webp(\?|$)/i.test(img.getAttribute('src') || ''));
 
-  const hasViewport =
-    lower.includes('name="viewport"') || lower.includes("name='viewport'");
+  const hasViewport = [...doc.querySelectorAll('head meta')].some((el) =>
+    attrEquals(el.getAttribute('name'), 'viewport')
+  );
 
   const semanticTags = ['nav', 'main', 'article', 'footer'];
-  const presentSemantic = semanticTags.filter((tag) => lower.includes(`<${tag}`));
+  const presentSemantic = semanticTags.filter((tag) => doc.querySelector(tag));
 
   return {
     hasSchema,

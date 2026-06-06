@@ -3,6 +3,11 @@ import * as chromeLauncher from 'chrome-launcher';
 import Wappalyzer from 'wappalyzer';
 import { generateExpertSuggestions } from './seoExpertMatrix.js';
 import { buildInfrastructureSignals } from './infrastructurePatchService.js';
+import {
+  extractLighthouseRenderedSignals,
+  mergeInfrastructureSignals,
+  mergeMetaTags,
+} from './htmlParserService.js';
 
 const AUDIT_TIMEOUT_MS = 120000;
 
@@ -102,15 +107,17 @@ function buildHeadingIssues(headings) {
   return issues;
 }
 
-function buildSeoIssues(scores, metaTags, headings) {
+function buildSeoIssues(scores, metaTags, headings, { lighthouseFailed = false } = {}) {
   const issues = [];
 
-  if (!metaTags.title.present) issues.push('Missing Title Tag');
-  if (!metaTags.description.present) issues.push('Missing Meta Description');
-  if (!metaTags.openGraph.titlePresent) issues.push('Missing OpenGraph Title');
-  if (!metaTags.openGraph.descriptionPresent) issues.push('Missing OpenGraph Description');
-  if (headings.counts.h1 === 0) issues.push('Missing H1 on Homepage');
-  if (headings.multipleH1) issues.push('Multiple H1 tags on page');
+  if (!lighthouseFailed) {
+    if (!metaTags.title.present) issues.push('Missing Title Tag');
+    if (!metaTags.description.present) issues.push('Missing Meta Description');
+    if (!metaTags.openGraph.titlePresent) issues.push('Missing OpenGraph Title');
+    if (!metaTags.openGraph.descriptionPresent) issues.push('Missing OpenGraph Description');
+    if (headings.counts.h1 === 0) issues.push('Missing H1 on Homepage');
+    if (headings.multipleH1) issues.push('Multiple H1 tags on page');
+  }
 
   if (scores.performance !== null && scores.performance < 50) {
     issues.push('Low Performance Score');
@@ -176,6 +183,7 @@ async function runLighthouseAudit(url) {
 
     const runnerResult = await lighthouse(url, options);
     const lhr = runnerResult.lhr;
+    const renderedSignals = extractLighthouseRenderedSignals(lhr);
 
     const scores = {
       performance: Math.round((lhr.categories.performance?.score ?? 0) * 100),
@@ -192,6 +200,7 @@ async function runLighthouseAudit(url) {
       metaTags,
       headings,
       seoIssues,
+      renderedSignals,
       error: null,
     };
   } finally {
@@ -271,15 +280,25 @@ export async function auditWebsite(rawUrl) {
     };
 
     const [html, crawlerFiles] = await Promise.all([fetchPageHtml(url), checkCrawlerFiles(url)]);
-    const infrastructure = {
-      ...buildInfrastructureSignals(html, url),
-      ...crawlerFiles,
+    const renderedSignals = lighthouseData.renderedSignals || {};
+    const rawInfrastructure = buildInfrastructureSignals(html, url);
+    const infrastructure = mergeInfrastructureSignals(rawInfrastructure, renderedSignals, crawlerFiles);
+
+    const mergedMetaTags = mergeMetaTags(lighthouseData.metaTags, html, renderedSignals);
+    const enrichedResult = {
+      ...baseResult,
+      lighthouse: {
+        ...baseResult.lighthouse,
+        metaTags: mergedMetaTags,
+      },
+      infrastructure,
+      renderedSignals,
     };
-    const expert = generateExpertSuggestions({ ...baseResult, infrastructure }, html);
+
+    const expert = generateExpertSuggestions(enrichedResult, html);
 
     return {
-      ...baseResult,
-      infrastructure,
+      ...enrichedResult,
       seoIssues: expert.seoIssues,
       expert,
     };

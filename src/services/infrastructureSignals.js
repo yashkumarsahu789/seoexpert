@@ -1,51 +1,14 @@
-const COMMON_PREFETCH_ORIGINS = [
-  'https://fonts.googleapis.com',
-  'https://fonts.gstatic.com',
-  'https://cdnjs.cloudflare.com',
-];
-
-function extractOrigins(html, siteOrigin) {
-  const origins = new Set();
-  const attrPattern = /(?:src|href)=["'](https?:\/\/[^"']+)["']/gi;
-  let match;
-
-  while ((match = attrPattern.exec(html)) !== null) {
-    try {
-      const origin = new URL(match[1]).origin;
-      if (origin !== siteOrigin) origins.add(origin);
-    } catch {
-      // skip
-    }
-  }
-
-  for (const origin of COMMON_PREFETCH_ORIGINS) {
-    if (html.includes(origin.replace('https://', ''))) origins.add(origin);
-  }
-
-  return [...origins];
+function attrEquals(value, expected) {
+  return String(value || '').trim().toLowerCase() === expected.toLowerCase();
 }
 
-function extractInternalPaths(html, siteOrigin) {
-  const paths = new Set(['/']);
-  const attrPattern = /href=["']([^"']+)["']/gi;
-  let match;
-
-  while ((match = attrPattern.exec(html)) !== null) {
-    const href = match[1].trim();
-    if (!href || href.startsWith('#') || href.startsWith('mailto:')) continue;
-    try {
-      const resolved = href.startsWith('http') ? new URL(href) : new URL(href, siteOrigin);
-      if (resolved.origin === siteOrigin) paths.add(resolved.pathname);
-    } catch {
-      // skip
-    }
-  }
-
-  return [...paths].slice(0, 8);
+function linkHasRel(el, rel) {
+  const value = String(el.getAttribute('rel') || '').toLowerCase();
+  return value.split(/\s+/).includes(rel.toLowerCase());
 }
 
 export function buildInfrastructureSignals(html = '', url = '') {
-  const lower = html.toLowerCase();
+  const doc = new DOMParser().parseFromString(html, 'text/html');
   let siteOrigin = '';
 
   try {
@@ -54,27 +17,65 @@ export function buildInfrastructureSignals(html = '', url = '') {
     siteOrigin = '';
   }
 
-  const scriptTags = html.match(/<script[^>]*>/gi) || [];
-  const blockingScripts = scriptTags.filter(
-    (tag) => /src=/i.test(tag) && !/\b(defer|async|type=["']module["'])\b/i.test(tag)
+  const hasCanonical = [...doc.querySelectorAll('head link')].some((el) => linkHasRel(el, 'canonical'));
+  const hasDnsPrefetch = [...doc.querySelectorAll('head link')].some((el) => linkHasRel(el, 'dns-prefetch'));
+  const hasPreconnect = [...doc.querySelectorAll('head link')].some((el) => linkHasRel(el, 'preconnect'));
+
+  const scripts = [...doc.querySelectorAll('script[src]')];
+  const blockingScripts = scripts.filter((el) => {
+    const type = String(el.getAttribute('type') || '').toLowerCase();
+    if (el.hasAttribute('defer') || el.hasAttribute('async')) return false;
+    if (type === 'module' || type === 'speculationrules') return false;
+    return true;
+  });
+
+  const images = [...doc.querySelectorAll('img')];
+  const hasSpeculationRules = [...doc.querySelectorAll('script')].some((el) =>
+    attrEquals(el.getAttribute('type'), 'speculationrules')
   );
-  const imgTags = html.match(/<img[^>]*>/gi) || [];
+
+  const hasSchema =
+    doc.querySelector('script[type="application/ld+json"]') !== null ||
+    doc.querySelector('[itemscope][itemtype]') !== null ||
+    /schema\.org/i.test(html);
+
+  const externalOrigins = new Set();
+  [...doc.querySelectorAll('script[src], link[href], img[src]')].forEach((el) => {
+    const src = el.getAttribute('src') || el.getAttribute('href');
+    if (!src || !/^https?:\/\//i.test(src)) return;
+    try {
+      const origin = new URL(src).origin;
+      if (siteOrigin && origin !== siteOrigin) externalOrigins.add(origin);
+    } catch {
+      // skip
+    }
+  });
+
+  const internalPaths = new Set(['/']);
+  [...doc.querySelectorAll('a[href]')].forEach((el) => {
+    const href = String(el.getAttribute('href') || '').trim();
+    if (!href || href.startsWith('#') || href.startsWith('mailto:')) return;
+    try {
+      const resolved = href.startsWith('http') ? new URL(href) : new URL(href, siteOrigin || url);
+      if (!siteOrigin || resolved.origin === siteOrigin) internalPaths.add(resolved.pathname || '/');
+    } catch {
+      // skip
+    }
+  });
 
   return {
-    hasCanonical: /<link[^>]+rel=["']canonical["']/i.test(html),
-    hasDnsPrefetch: /<link[^>]+rel=["']dns-prefetch["']/i.test(html),
-    hasPreconnect: /<link[^>]+rel=["']preconnect["']/i.test(html),
+    hasCanonical,
+    hasDnsPrefetch,
+    hasPreconnect,
     blockingScriptCount: blockingScripts.length,
-    hasSpeculationRules: /type=["']speculationrules["']/i.test(html),
+    hasSpeculationRules,
     hasRobotsTxt: false,
     hasSitemap: false,
-    hasSchema:
-      lower.includes('application/ld+json') ||
-      lower.includes('schema.org') ||
-      lower.includes('localbusiness'),
-    imagesWithoutLazy: imgTags.filter((t) => !/\bloading=["']lazy["']/i.test(t)).length,
-    imagesWithoutAlt: imgTags.filter((t) => !/\balt=["'][^"']+["']/i.test(t)).length,
-    externalOrigins: siteOrigin ? extractOrigins(html, siteOrigin) : [],
-    internalPaths: siteOrigin ? extractInternalPaths(html, siteOrigin) : [],
+    hasSchema,
+    imagesWithoutLazy: images.filter((img) => !img.getAttribute('loading')).length,
+    imagesWithoutAlt: images.filter((img) => !String(img.getAttribute('alt') || '').trim()).length,
+    externalOriginCount: externalOrigins.size,
+    externalOrigins: [...externalOrigins],
+    internalPaths: [...internalPaths].slice(0, 8),
   };
 }

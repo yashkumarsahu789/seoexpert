@@ -1,3 +1,11 @@
+import {
+  mergeHeadings,
+  mergeHtmlSignals,
+  mergeInfrastructureSignals,
+  mergeMetaTags,
+  parseHtmlSignals,
+} from './htmlParserService.js';
+
 function getTechNames(auditData) {
   return (auditData.techStack?.technologies || []).map((t) => t.name.toLowerCase());
 }
@@ -17,39 +25,18 @@ function deriveSiteName(url) {
 }
 
 export function buildHtmlSignals(html = '') {
-  const doc = typeof DOMParser !== 'undefined'
-    ? new DOMParser().parseFromString(html, 'text/html')
-    : null;
-  const lower = html.toLowerCase();
-
-  const hasSchema =
-    lower.includes('application/ld+json') ||
-    lower.includes('schema.org') ||
-    Boolean(doc?.querySelector('script[type="application/ld+json"]'));
-
-  const images = doc ? [...doc.querySelectorAll('img')] : [];
-  const hasLazyLoading =
-    lower.includes('loading="lazy"') || images.some((img) => img.getAttribute('loading') === 'lazy');
-  const hasWebP = lower.includes('.webp') || images.some((img) => img.src?.includes('.webp'));
-
-  const hasViewport = Boolean(
-    doc?.querySelector('meta[name="viewport"]') || lower.includes('name="viewport"')
-  );
-
-  const semanticTags = ['nav', 'main', 'article', 'footer'];
-  const presentSemantic = semanticTags.filter((tag) =>
-    doc ? doc.querySelector(tag) : lower.includes(`<${tag}`)
-  );
-
-  return {
-    hasSchema,
-    hasLazyLoading,
-    hasWebP,
-    hasViewport,
-    hasSemanticTags: presentSemantic.length >= 2,
-    presentSemantic,
-    missingSemantic: semanticTags.filter((tag) => !presentSemantic.includes(tag)),
-  };
+  if (!html?.trim()) {
+    return {
+      hasSchema: false,
+      hasLazyLoading: false,
+      hasWebP: false,
+      hasViewport: false,
+      hasSemanticTags: false,
+      presentSemantic: [],
+      missingSemantic: ['nav', 'main', 'article', 'footer'],
+    };
+  }
+  return parseHtmlSignals(html);
 }
 
 function detectThemeCategory(techNames, html = '') {
@@ -235,19 +222,31 @@ function runChecks(checks, ctx) {
 
 export function generateExpertSuggestions(auditData, html = '') {
   const techNames = getTechNames(auditData);
-  const signals = buildHtmlSignals(html);
+  const rendered = auditData.renderedSignals || {};
+  const rawSignals = buildHtmlSignals(html);
+  const signals = mergeHtmlSignals(rawSignals, rendered);
   const category = detectThemeCategory(techNames, html);
   const theme = THEME_MATRIX[category];
   const siteName = deriveSiteName(auditData.url);
 
+  const metaTags = mergeMetaTags(auditData.lighthouse?.metaTags || {}, html, rendered);
+  const headings = mergeHeadings(auditData.lighthouse?.headings || {}, html);
+  const infrastructure = mergeInfrastructureSignals(
+    auditData.infrastructure || {},
+    rendered,
+    {}
+  );
+
   const ctx = {
     techNames,
     signals,
-    infrastructure: auditData.infrastructure || {},
-    metaTags: auditData.lighthouse?.metaTags || {},
-    headings: auditData.lighthouse?.headings || { counts: { h1: 0 } },
+    infrastructure,
+    metaTags,
+    headings,
     scores: auditData.lighthouse?.scores || { performance: null },
     siteName,
+    isSpa: category === 'spa',
+    lighthouseAvailable: Boolean(rendered.lighthouseAvailable || !auditData.lighthouse?.error),
   };
 
   const themeResult = runChecks(theme.checks, ctx);

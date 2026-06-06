@@ -1,5 +1,6 @@
 import { generateExpertSuggestions } from './seoExpertMatrix.js';
 import { buildInfrastructureSignals } from './infrastructureSignals.js';
+import { parseMetaFromDocument } from './htmlParserClient.js';
 
 function normalizeUrl(input) {
   const trimmed = input.trim();
@@ -74,13 +75,9 @@ function detectTechnologies(html, url) {
 
 function parseAuditFromHtml(html, url) {
   const doc = new DOMParser().parseFromString(html, 'text/html');
-  const title = doc.querySelector('title')?.textContent?.trim() || '';
-  const description =
-    doc.querySelector('meta[name="description"]')?.getAttribute('content')?.trim() || '';
-  const ogTitle =
-    doc.querySelector('meta[property="og:title"]')?.getAttribute('content')?.trim() || '';
-  const ogDescription =
-    doc.querySelector('meta[property="og:description"]')?.getAttribute('content')?.trim() || '';
+  const parsedMeta = parseMetaFromDocument(doc);
+  const { title, description, ogTitle, ogDescription, hasTitle, hasDescription, hasOgTitle, hasOgDescription } =
+    parsedMeta;
 
   const headings = { h1: 0, h2: 0, h3: 0, h4: 0, h5: 0, h6: 0 };
   for (let i = 1; i <= 6; i += 1) {
@@ -88,11 +85,11 @@ function parseAuditFromHtml(html, url) {
   }
 
   const metaTags = {
-    title: { present: Boolean(title), value: title || null, score: title ? 1 : 0 },
-    description: { present: Boolean(description), value: description || null, score: description ? 1 : 0 },
+    title: { present: hasTitle, value: title || null, score: hasTitle ? 1 : 0 },
+    description: { present: hasDescription, value: description || null, score: hasDescription ? 1 : 0 },
     openGraph: {
-      titlePresent: Boolean(ogTitle || doc.querySelector('meta[property="og:title"]')),
-      descriptionPresent: Boolean(ogDescription || doc.querySelector('meta[property="og:description"]')),
+      titlePresent: hasOgTitle,
+      descriptionPresent: hasOgDescription,
     },
   };
 

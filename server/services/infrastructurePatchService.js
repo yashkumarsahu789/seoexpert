@@ -1,3 +1,5 @@
+import { parseInfrastructureFromHtml } from './htmlParserService.js';
+
 const COMMON_PREFETCH_ORIGINS = [
   'https://fonts.googleapis.com',
   'https://fonts.gstatic.com',
@@ -65,7 +67,25 @@ function extractInternalPaths(html, siteOrigin) {
 }
 
 export function buildInfrastructureSignals(html = '', url = '') {
-  const lower = html.toLowerCase();
+  if (!html?.trim()) {
+    return {
+      hasCanonical: false,
+      hasDnsPrefetch: false,
+      hasPreconnect: false,
+      blockingScriptCount: 0,
+      hasSpeculationRules: false,
+      hasRobotsTxt: false,
+      hasSitemap: false,
+      hasSchema: false,
+      imagesWithoutLazy: 0,
+      imagesWithoutAlt: 0,
+      externalOriginCount: 0,
+      externalOrigins: [],
+      internalPaths: ['/'],
+    };
+  }
+
+  const parsed = parseInfrastructureFromHtml(html, url);
   let siteOrigin = '';
 
   try {
@@ -74,46 +94,19 @@ export function buildInfrastructureSignals(html = '', url = '') {
     siteOrigin = '';
   }
 
-  const hasCanonical = /<link[^>]+rel=["']canonical["']/i.test(html);
-  const hasDnsPrefetch = /<link[^>]+rel=["']dns-prefetch["']/i.test(html);
-  const hasPreconnect = /<link[^>]+rel=["']preconnect["']/i.test(html);
-
-  const scriptTags = html.match(/<script[^>]*>/gi) || [];
-  const blockingScripts = scriptTags.filter(
-    (tag) =>
-      /src=/i.test(tag) &&
-      !/\b(defer|async|type=["']module["'])\b/i.test(tag) &&
-      !/type=["']speculationrules["']/i.test(tag)
-  );
-
-  const hasSpeculationRules = /type=["']speculationrules["']/i.test(html);
-  const hasRobotsTxt = false;
-  const hasSitemap = lower.includes('sitemap.xml') || /<loc>[^<]+sitemap/i.test(html);
-  const hasSchema =
-    lower.includes('application/ld+json') ||
-    lower.includes('schema.org') ||
-    lower.includes('localbusiness');
-
-  const imgTags = html.match(/<img[^>]*>/gi) || [];
-  const imagesWithoutLazy = imgTags.filter((tag) => !/\bloading=["']lazy["']/i.test(tag));
-  const imagesWithoutAlt = imgTags.filter((tag) => !/\balt=["'][^"']+["']/i.test(tag));
-
-  const externalOrigins = siteOrigin ? extractOrigins(html, siteOrigin) : [];
+  const extraOrigins = siteOrigin ? extractOrigins(html, siteOrigin) : [];
+  const mergedOrigins = [...new Set([...parsed.externalOrigins, ...extraOrigins])];
 
   return {
-    hasCanonical,
-    hasDnsPrefetch,
-    hasPreconnect,
-    blockingScriptCount: blockingScripts.length,
-    hasSpeculationRules,
-    hasRobotsTxt,
-    hasSitemap,
-    hasSchema,
-    imagesWithoutLazy: imagesWithoutLazy.length,
-    imagesWithoutAlt: imagesWithoutAlt.length,
-    externalOriginCount: externalOrigins.length,
-    externalOrigins,
-    internalPaths: siteOrigin ? extractInternalPaths(html, siteOrigin) : [],
+    ...parsed,
+    externalOrigins: mergedOrigins,
+    externalOriginCount: mergedOrigins.length,
+    internalPaths:
+      parsed.internalPaths.length > 1
+        ? parsed.internalPaths
+        : siteOrigin
+          ? extractInternalPaths(html, siteOrigin)
+          : ['/'],
   };
 }
 

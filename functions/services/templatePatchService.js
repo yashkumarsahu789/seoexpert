@@ -4,6 +4,7 @@ import {
   generateSitemapXml,
   listInfrastructureFixes,
 } from './infrastructurePatchService.js';
+import { hasMetaInHtml, hasTitleInHtml, parseMetaFromHtml } from './htmlParserService.js';
 
 export function deriveSiteName(url) {
   const hostname = new URL(url).hostname.replace(/^www\./i, '');
@@ -44,18 +45,20 @@ export function buildSeoTemplates(url, seoContent = {}) {
   };
 }
 
-function hasMetaTag(html, pattern) {
-  return pattern.test(html);
-}
-
 export function applySeoTemplates(html, auditData) {
   const { title, description } = buildSeoTemplates(auditData.url, auditData.seoContent);
   const { metaTags } = auditData.lighthouse;
   let result = html;
   const insertions = [];
+  const htmlMeta = parseMetaFromHtml(result);
 
-  if (!metaTags.title.present) {
-    if (hasMetaTag(result, /<title[^>]*>[\s\S]*?<\/title>/i)) {
+  const titlePresent = metaTags.title.present || htmlMeta.hasTitle;
+  const descriptionPresent = metaTags.description.present || htmlMeta.hasDescription;
+  const ogTitlePresent = metaTags.openGraph.titlePresent || htmlMeta.hasOgTitle;
+  const ogDescriptionPresent = metaTags.openGraph.descriptionPresent || htmlMeta.hasOgDescription;
+
+  if (!titlePresent) {
+    if (hasTitleInHtml(result)) {
       result = result.replace(/<title[^>]*>[\s\S]*?<\/title>/i, `<title>${title}</title>`);
     } else {
       insertions.push(`<title>${title}</title>`);
@@ -64,32 +67,34 @@ export function applySeoTemplates(html, auditData) {
     result = result.replace(/<title[^>]*>[\s\S]*?<\/title>/i, `<title>${title}</title>`);
   }
 
-  if (!metaTags.description.present && !hasMetaTag(result, /<meta[^>]+name=["']description["']/i)) {
+  if (!descriptionPresent && !hasMetaInHtml(result, { name: 'description' })) {
     insertions.push(`<meta name="description" content="${description}" />`);
   } else if (auditData.seoContent?.customDescription?.trim()) {
-    if (hasMetaTag(result, /<meta[^>]+name=["']description["']/i)) {
-      result = result.replace(
-        /<meta[^>]+name=["']description["'][^>]*>/i,
-        `<meta name="description" content="${description}" />`
-      );
+    if (hasMetaInHtml(result, { name: 'description' })) {
+      result = result.replace(/<meta[^>]*>/gi, (tag) => {
+        if (/name\s*=\s*["']description["']/i.test(tag)) {
+          return `<meta name="description" content="${description}" />`;
+        }
+        return tag;
+      });
     } else {
       insertions.push(`<meta name="description" content="${description}" />`);
     }
   }
 
-  if (!metaTags.openGraph.titlePresent && !hasMetaTag(result, /<meta[^>]+property=["']og:title["']/i)) {
+  if (!ogTitlePresent && !hasMetaInHtml(result, { property: 'og:title' })) {
     insertions.push(`<meta property="og:title" content="${title}" />`);
-  } else if (auditData.seoContent?.customTitle?.trim()) {
+  } else if (auditData.seoContent?.customTitle?.trim() && !ogTitlePresent) {
     insertions.push(`<meta property="og:title" content="${title}" />`);
   }
 
-  if (!metaTags.openGraph.descriptionPresent && !hasMetaTag(result, /<meta[^>]+property=["']og:description["']/i)) {
+  if (!ogDescriptionPresent && !hasMetaInHtml(result, { property: 'og:description' })) {
     insertions.push(`<meta property="og:description" content="${description}" />`);
-  } else if (auditData.seoContent?.customDescription?.trim()) {
+  } else if (auditData.seoContent?.customDescription?.trim() && !ogDescriptionPresent) {
     insertions.push(`<meta property="og:description" content="${description}" />`);
   }
 
-  if (!hasMetaTag(result, /<meta[^>]+property=["']og:type["']/i)) {
+  if (!hasMetaInHtml(result, { property: 'og:type' })) {
     insertions.push('<meta property="og:type" content="website" />');
   }
 
