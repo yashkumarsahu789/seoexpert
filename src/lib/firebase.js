@@ -19,4 +19,18 @@ isSupported().then((supported) => {
   }
 });
 
-export const API_BASE = import.meta.env.VITE_API_URL || '/api';
+function resolveApiBase() {
+  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+  if (import.meta.env.DEV) return '/api';
+
+  const host = window.location.hostname;
+  if (host.endsWith('web.app') || host.endsWith('firebaseapp.com')) {
+    return '/api';
+  }
+
+  return '/api';
+}
+
+export const API_BASE = resolveApiBase();
+
+export const FIREBASE_HOSTING_URL = 'https://manager-fc26f.web.app';

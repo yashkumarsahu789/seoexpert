@@ -12,6 +12,8 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://127.0.0.1:5173',
   'https://yashkumarsahu789.github.io',
+  'https://manager-fc26f.web.app',
+  'https://manager-fc26f.firebaseapp.com',
 ];
 
 app.use(
@@ -76,14 +78,21 @@ app.post('/api/patch-code', async (req, res) => {
 
 app.post('/api/orchestrate', async (req, res) => {
   try {
-    const { auditData, token, repo, branch = 'main' } = req.body;
+    const { auditData, token, repo, branch = 'main', seoContent } = req.body;
 
     if (!auditData) return res.status(400).json({ error: 'auditData is required' });
     if (!token) return res.status(400).json({ error: 'GitHub PAT is required' });
     if (!repo) return res.status(400).json({ error: 'Repository is required' });
+    if (!seoContent?.customTitle?.trim()) {
+      return res.status(400).json({ error: 'Custom website title is required' });
+    }
+    if (!seoContent?.customDescription?.trim()) {
+      return res.status(400).json({ error: 'Custom meta description is required' });
+    }
 
-    const auditSummary = formatAuditForAI(auditData);
-    const patchResult = generateSeoPatches(auditData);
+    const auditWithContent = { ...auditData, seoContent };
+    const auditSummary = formatAuditForAI(auditWithContent);
+    const patchResult = generateSeoPatches(auditWithContent);
 
     if (!patchResult.patches?.length) {
       return res.status(422).json({

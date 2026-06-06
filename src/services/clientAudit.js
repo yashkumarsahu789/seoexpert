@@ -118,7 +118,7 @@ function parseAuditFromHtml(html, url) {
         issues: seoIssues.filter((i) => i.includes('H1')),
       },
       error: null,
-      note: 'Lighthouse scores require Firebase Blaze backend. Meta tags and tech stack analyzed in browser.',
+      note: 'Full Lighthouse scores available on Firebase Hosting with Blaze plan backend.',
     },
     seoIssues,
     success: true,
@@ -143,3 +143,10 @@ export function shouldUseClientAudit() {
   if (import.meta.env.DEV) return false;
   return window.location.hostname.endsWith('github.io');
 }
+
+export function isFirebaseHosting() {
+  const host = window.location.hostname;
+  return host.endsWith('web.app') || host.endsWith('firebaseapp.com');
+}
+
+export { deriveSiteName };

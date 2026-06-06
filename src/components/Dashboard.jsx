@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -13,8 +13,8 @@ import {
   XCircle,
   Zap,
 } from 'lucide-react';
-import { API_BASE } from '../lib/firebase.js';
-import { auditWebsiteClient, shouldUseClientAudit } from '../services/clientAudit.js';
+import { API_BASE, FIREBASE_HOSTING_URL } from '../lib/firebase.js';
+import { auditWebsiteClient, deriveSiteName, isFirebaseHosting, shouldUseClientAudit } from '../services/clientAudit.js';
 
 const TECH_ICONS = {
   React: Code2,
@@ -72,9 +72,19 @@ export default function Dashboard() {
 
   const [githubToken, setGithubToken] = useState('');
   const [githubRepo, setGithubRepo] = useState('yashkumarsahu789/seoexpert');
+  const [customTitle, setCustomTitle] = useState('');
+  const [customDescription, setCustomDescription] = useState('');
   const [patchLoading, setPatchLoading] = useState(false);
   const [patchResult, setPatchResult] = useState(null);
   const [patchError, setPatchError] = useState(null);
+
+  useEffect(() => {
+    if (!auditData?.url) return;
+    const existingTitle = auditData.lighthouse?.metaTags?.title?.value;
+    const siteName = deriveSiteName(auditData.url);
+    setCustomTitle(existingTitle || `Welcome to ${siteName}`);
+    setCustomDescription('');
+  }, [auditData]);
 
   async function handleAnalyze(e) {
     e.preventDefault();
@@ -125,7 +135,18 @@ export default function Dashboard() {
 
   async function handlePatchDeploy() {
     if (shouldUseClientAudit()) {
-      setPatchError('GitHub auto-deploy runs from local backend only. Run: npm run dev on your PC, then use Patch & Deploy.');
+      setPatchError(
+        `Full patch & deploy needs Firebase backend. Open ${FIREBASE_HOSTING_URL} or run npm run dev locally.`
+      );
+      return;
+    }
+
+    if (!customTitle.trim()) {
+      setPatchError('Please enter your website title for the SEO patch.');
+      return;
+    }
+    if (!customDescription.trim()) {
+      setPatchError('Please write 1–2 lines about your business for the meta description.');
       return;
     }
 
@@ -142,6 +163,10 @@ export default function Dashboard() {
           token: githubToken,
           repo: githubRepo,
           branch: 'main',
+          seoContent: {
+            customTitle: customTitle.trim(),
+            customDescription: customDescription.trim(),
+          },
         }),
       });
       const data = await res.json();
@@ -171,7 +196,7 @@ export default function Dashboard() {
           </div>
           <div className="hidden items-center gap-2 rounded-full border border-slate-800 bg-slate-900/50 px-3 py-1.5 text-xs text-slate-400 sm:flex">
             <Zap className="h-3.5 w-3.5 text-amber-400" />
-            Lighthouse + Wappalyzer
+            {isFirebaseHosting() ? 'Full Backend Mode' : 'GitHub Pages · Lite Audit'}
           </div>
         </div>
       </header>
@@ -183,7 +208,16 @@ export default function Dashboard() {
               Analyze Your Web Ecosystem
             </h2>
             <p className="mb-10 text-slate-400">
-              Detect tech stack, run SEO audits, and auto-patch with instant templates — 100% free, no API keys.
+              Detect tech stack, run SEO audits, and deploy custom meta-tag fixes — no AI key required.
+              {shouldUseClientAudit() && (
+                <span className="mt-2 block text-amber-300/90">
+                  Lite mode on GitHub Pages. For Lighthouse scores + GitHub push, use{' '}
+                  <a href={FIREBASE_HOSTING_URL} className="underline" target="_blank" rel="noreferrer">
+                    Firebase Hosting
+                  </a>
+                  .
+                </span>
+              )}
             </p>
 
             <form onSubmit={handleAnalyze} className="flex flex-col gap-3 sm:flex-row">
@@ -337,13 +371,41 @@ export default function Dashboard() {
             <section className="rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-950/40 to-slate-900/40 p-6">
               <div className="mb-5 flex items-center gap-2">
                 <Rocket className="h-5 w-5 text-emerald-400" />
-                <h3 className="text-lg font-semibold">Template Auto-Fix & Deploy</h3>
+                <h3 className="text-lg font-semibold">Custom SEO Patch & Deploy</h3>
               </div>
               <p className="mb-5 text-sm text-slate-400">
-                Missing meta tags are filled instantly from URL templates — no AI, no wait, no rate limits.
+                Apna custom title aur description likho — backend bina AI key ke perfect meta tags banake GitHub par
+                push karega. Har site ka content unique rahega.
               </p>
 
-              <div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-slate-500">
+                    Website Title (meta title)
+                  </label>
+                  <input
+                    type="text"
+                    value={customTitle}
+                    onChange={(e) => setCustomTitle(e.target.value)}
+                    placeholder="e.g. LifeSolveNow — Digital Services for Local Shops"
+                    className="w-full rounded-xl border border-slate-700 bg-slate-950/60 px-4 py-3 text-sm outline-none focus:border-emerald-500/50"
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-slate-500">
+                    Meta Description (2 lines about your business)
+                  </label>
+                  <textarea
+                    value={customDescription}
+                    onChange={(e) => setCustomDescription(e.target.value)}
+                    rows={3}
+                    placeholder="e.g. LifeSolveNow helps local shopkeepers go online with easy websites, SEO, and digital marketing."
+                    className="w-full resize-none rounded-xl border border-slate-700 bg-slate-950/60 px-4 py-3 text-sm outline-none focus:border-emerald-500/50"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-4">
                 <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-slate-500">
                   GitHub Repository (owner/repo)
                 </label>
@@ -372,7 +434,13 @@ export default function Dashboard() {
               <button
                 type="button"
                 onClick={handlePatchDeploy}
-                disabled={patchLoading || !githubToken || !githubRepo}
+                disabled={
+                  patchLoading ||
+                  !githubToken ||
+                  !githubRepo ||
+                  !customTitle.trim() ||
+                  !customDescription.trim()
+                }
                 className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-8 py-4 text-base font-bold text-slate-950 transition hover:from-emerald-400 hover:to-teal-400 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
               >
                 {patchLoading ? (

@@ -8,6 +8,9 @@
     "dev:client": "vite",
     "dev:server": "npm run dev --prefix server",
     "build": "vite build",
+    "build:firebase": "cross-env VITE_BASE_PATH=/ vite build",
+    "deploy:firebase": "npm run build:firebase && npx firebase-tools@latest deploy --only hosting,functions",
+    "deploy:firebase:hosting": "npm run build:firebase && npx firebase-tools@latest deploy --only hosting",
     "preview": "vite preview --base /seoexpert/",
     "lint": "eslint .",
     "start:server": "npm start --prefix server"
@@ -25,6 +28,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
     "concurrently": "^9.1.2",
+    "cross-env": "^7.0.3",
     "eslint": "^10.3.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",

@@ -1,16 +1,23 @@
 # SEO Expert — AI-Driven SEO Optimization Tool
 
-Analyze any website's tech stack and SEO health, then auto-generate and deploy fixes via GitHub — **100% free, no AI keys required**.
+Analyze any website's tech stack and SEO health, then deploy **your own custom** meta tags to GitHub — **no AI key required**.
+
+## Live URLs
+
+| Platform | URL | Mode |
+|----------|-----|------|
+| **Firebase (recommended)** | https://manager-fc26f.web.app | Full backend: Lighthouse + Wappalyzer + GitHub push |
+| GitHub Pages | https://yashkumarsahu789.github.io/seoexpert/ | Lite audit in browser (no Lighthouse scores) |
 
 ## Features
 
-- **Tech Stack Detection** — Wappalyzer (local, no paid APIs)
-- **SEO Audit** — Lighthouse programmatic audit (Performance, Accessibility, SEO)
-- **Template Auto-Fix** — Instant meta tag generation from URL (no AI, no rate limits)
-- **GitHub Auto-Deploy** — Commits SEO fixes and triggers Vercel/Netlify deploy
-- **Firebase** — Hosting + Cloud Functions backend
+- **Tech Stack Detection** — Wappalyzer (Firebase) / HTML heuristics (GitHub Pages)
+- **SEO Audit** — Lighthouse on Firebase backend; meta/headings in browser on GitHub Pages
+- **Custom Template Patch** — User writes title + description → backend pushes to GitHub
+- **GitHub Auto-Deploy** — Commits SEO fixes to your repo
+- **No AI Key** — Template engine uses your custom text, not generic duplicates
 
-## Quick Start (Local)
+## Quick Start (Local — full power)
 
 ```bash
 npm install
@@ -21,60 +28,51 @@ npm run dev
 - Frontend: http://localhost:5173
 - API: http://localhost:3001
 
-## How Template Fixes Work
+## Firebase Deploy (100% live product)
 
-When Lighthouse finds missing SEO tags, the backend instantly generates:
+### Step 1 — Upgrade to Blaze plan (required for Cloud Functions + Lighthouse)
 
-| Missing | Generated from URL |
-|---------|-------------------|
-| Title | `Welcome to LifeSolveNow` (from `lifesolvenow.com`) |
-| Meta Description | `Explore updates, services, and official platform features on LifeSolveNow.` |
-| OpenGraph tags | Same title + description |
+https://console.firebase.google.com/project/manager-fc26f/usage/details
 
-No AI key. No network call. Instant patch → GitHub push.
+Spark (free) plan cannot deploy Cloud Functions with Lighthouse.
 
-## API Endpoints
+### Step 2 — Deploy
+
+```bash
+npm install
+npm install --prefix functions
+npm run deploy:firebase
+```
+
+Or hosting only (UI without backend API):
+
+```bash
+npm run deploy:firebase:hosting
+```
+
+## Custom SEO Patch Flow (Step 6)
+
+1. Run audit on target website URL
+2. Fill **Website Title** — e.g. `LifeSolveNow — Digital Services for Local Shops`
+3. Fill **Meta Description** — 1–2 lines about the business (unique per user)
+4. Add GitHub PAT + repo → **Authorize Patch & Deploy**
+
+Backend converts your text into `<title>`, `<meta description>`, and OpenGraph tags — no AI, no duplicate generic text.
+
+## API Endpoints (Firebase / Local)
 
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | `/api/audit` | Audit URL (tech stack + Lighthouse) |
-| POST | `/api/generate-patch` | Template-based SEO patches |
+| POST | `/api/audit` | Full audit (Lighthouse + Wappalyzer) |
+| POST | `/api/generate-patch` | Custom template patches |
 | POST | `/api/patch-code` | Push patches to GitHub |
-| POST | `/api/orchestrate` | Full flow: template patch → GitHub deploy |
+| POST | `/api/orchestrate` | Audit → custom patch → GitHub deploy |
 
-## GitHub Pages Live URL
+## GitHub Pages Deploy
 
-https://yashkumarsahu789.github.io/seoexpert/
+Auto-deploys on push to `main` via GitHub Actions (`.github/workflows/deploy-pages.yml`).
 
-### GitHub Pages setup
-
-**Source must be:** Settings → Pages → **GitHub Actions** (not "Deploy from branch").
-
-The workflow `.github/workflows/deploy-pages.yml` builds `dist/` and publishes it via `deploy-pages@v4`.
-
-After a green deploy job, page source should contain:
-
-```html
-<script src="/seoexpert/assets/index-....js"></script>
-```
-
-If you still see `/src/main.jsx`, the Actions deploy did not publish (check the **deploy** job, not just **build**).
-
-**Fallback:** Settings → Pages → Branch `main` → folder **`/docs`** (built files are committed in `docs/`).
-
-## Firebase Deploy
-
-```bash
-npm run build
-npm install --prefix functions
-npx firebase-tools@latest deploy
-```
-
-Project: `manager-fc26f`
-
-## Required for Auto-Deploy
-
-- **GitHub PAT** — `repo` scope only (for pushing SEO fixes)
+Settings → Pages → Source: **GitHub Actions**
 
 ## Repo
 

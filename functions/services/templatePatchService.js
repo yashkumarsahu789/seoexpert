@@ -9,12 +9,32 @@ export function deriveSiteName(url) {
     .join('');
 }
 
-export function buildSeoTemplates(url) {
-  const siteName = deriveSiteName(url);
-  const title = `Welcome to ${siteName}`;
-  const description = `Explore updates, services, and official platform features on ${siteName}.`;
+function escapeAttr(value) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
 
-  return { siteName, title, description };
+export function buildSeoTemplates(url, seoContent = {}) {
+  const siteName = deriveSiteName(url);
+  const title =
+    seoContent.customTitle?.trim() ||
+    seoContent.title?.trim() ||
+    `Welcome to ${siteName}`;
+  const description =
+    seoContent.customDescription?.trim() ||
+    seoContent.description?.trim() ||
+    `Explore updates, services, and official platform features on ${siteName}.`;
+
+  return {
+    siteName,
+    title: escapeAttr(title),
+    description: escapeAttr(description),
+    rawTitle: title,
+    rawDescription: description,
+  };
 }
 
 function hasMetaTag(html, pattern) {
@@ -22,7 +42,7 @@ function hasMetaTag(html, pattern) {
 }
 
 export function applySeoTemplates(html, auditData) {
-  const { title, description, siteName } = buildSeoTemplates(auditData.url);
+  const { title, description } = buildSeoTemplates(auditData.url, auditData.seoContent);
   const { metaTags } = auditData.lighthouse;
   let result = html;
   const insertions = [];
@@ -33,17 +53,32 @@ export function applySeoTemplates(html, auditData) {
     } else {
       insertions.push(`<title>${title}</title>`);
     }
+  } else if (auditData.seoContent?.customTitle?.trim()) {
+    result = result.replace(/<title[^>]*>[\s\S]*?<\/title>/i, `<title>${title}</title>`);
   }
 
   if (!metaTags.description.present && !hasMetaTag(result, /<meta[^>]+name=["']description["']/i)) {
     insertions.push(`<meta name="description" content="${description}" />`);
+  } else if (auditData.seoContent?.customDescription?.trim()) {
+    if (hasMetaTag(result, /<meta[^>]+name=["']description["']/i)) {
+      result = result.replace(
+        /<meta[^>]+name=["']description["'][^>]*>/i,
+        `<meta name="description" content="${description}" />`
+      );
+    } else {
+      insertions.push(`<meta name="description" content="${description}" />`);
+    }
   }
 
   if (!metaTags.openGraph.titlePresent && !hasMetaTag(result, /<meta[^>]+property=["']og:title["']/i)) {
     insertions.push(`<meta property="og:title" content="${title}" />`);
+  } else if (auditData.seoContent?.customTitle?.trim()) {
+    insertions.push(`<meta property="og:title" content="${title}" />`);
   }
 
   if (!metaTags.openGraph.descriptionPresent && !hasMetaTag(result, /<meta[^>]+property=["']og:description["']/i)) {
+    insertions.push(`<meta property="og:description" content="${description}" />`);
+  } else if (auditData.seoContent?.customDescription?.trim()) {
     insertions.push(`<meta property="og:description" content="${description}" />`);
   }
 
@@ -61,13 +96,19 @@ export function applySeoTemplates(html, auditData) {
 function listFixableIssues(auditData) {
   const issues = [];
   const { metaTags } = auditData.lighthouse;
+  const hasCustomContent =
+    auditData.seoContent?.customTitle?.trim() || auditData.seoContent?.customDescription?.trim();
 
-  if (!metaTags.title.present) issues.push('title');
-  if (!metaTags.description.present) issues.push('meta description');
-  if (!metaTags.openGraph.titlePresent) issues.push('og:title');
-  if (!metaTags.openGraph.descriptionPresent) issues.push('og:description');
+  if (!metaTags.title.present || hasCustomContent) issues.push('title');
+  if (!metaTags.description.present || hasCustomContent) issues.push('meta description');
+  if (!metaTags.openGraph.titlePresent || auditData.seoContent?.customTitle?.trim()) {
+    issues.push('og:title');
+  }
+  if (!metaTags.openGraph.descriptionPresent || auditData.seoContent?.customDescription?.trim()) {
+    issues.push('og:description');
+  }
 
-  return issues;
+  return [...new Set(issues)];
 }
 
 const DEFAULT_HTML = `<!doctype html>
@@ -80,16 +121,15 @@ const DEFAULT_HTML = `<!doctype html>
 </html>`;
 
 export function generateSeoPatches(auditData) {
-  const fixable = listFixableIssues(auditData);
-
-  if (fixable.length === 0) {
-    return {
-      patches: [],
-      summary: 'No missing meta tags — template fixes not required.',
-    };
+  if (!auditData.seoContent?.customTitle?.trim()) {
+    throw new Error('Custom website title is required for SEO patch');
+  }
+  if (!auditData.seoContent?.customDescription?.trim()) {
+    throw new Error('Custom meta description is required for SEO patch');
   }
 
-  const { siteName } = buildSeoTemplates(auditData.url);
+  const fixable = listFixableIssues(auditData);
+  const { siteName, rawTitle } = buildSeoTemplates(auditData.url, auditData.seoContent);
 
   return {
     patches: [
@@ -100,6 +140,6 @@ export function generateSeoPatches(auditData) {
         fallbackContent: applySeoTemplates(DEFAULT_HTML, auditData),
       },
     ],
-    summary: `Instant template fixes for ${siteName}: ${fixable.join(', ')}`,
+    summary: `Custom SEO patch for ${siteName}: "${rawTitle}" → ${fixable.join(', ')}`,
   };
 }
