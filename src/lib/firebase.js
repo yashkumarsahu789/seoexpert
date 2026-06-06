@@ -19,4 +19,8 @@ isSupported().then((supported) => {
   }
 });
 
-export const API_BASE = import.meta.env.VITE_API_URL || '/api';
+export const API_BASE =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV
+    ? '/api'
+    : 'https://us-central1-manager-fc26f.cloudfunctions.net/api');

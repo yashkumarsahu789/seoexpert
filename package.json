@@ -8,8 +8,8 @@
     "dev:client": "vite",
     "dev:server": "npm run dev --prefix server",
     "build": "vite build",
+    "preview": "vite preview --base /seoexpert/",
     "lint": "eslint .",
-    "preview": "vite preview",
     "start:server": "npm start --prefix server"
   },
   "dependencies": {

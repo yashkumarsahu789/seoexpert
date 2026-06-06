@@ -42,6 +42,14 @@ No AI key. No network call. Instant patch → GitHub push.
 | POST | `/api/patch-code` | Push patches to GitHub |
 | POST | `/api/orchestrate` | Full flow: template patch → GitHub deploy |
 
+## GitHub Pages Live URL
+
+https://yashkumarsahu789.github.io/seoexpert/
+
+Deploys automatically on push to `main` via GitHub Actions.
+
+**One-time setup:** Repo → Settings → Pages → Build and deployment → Source: **GitHub Actions**
+
 ## Firebase Deploy
 
 ```bash
