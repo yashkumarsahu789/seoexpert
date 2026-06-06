@@ -30,7 +30,9 @@ jobs:
           VITE_API_URL: https://us-central1-manager-fc26f.cloudfunctions.net/api
 
       - name: Add SPA fallback
-        run: cp dist/index.html dist/404.html
+        run: |
+          cp dist/index.html dist/404.html
+          touch dist/.nojekyll
 
       - name: Deploy to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
