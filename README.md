@@ -48,12 +48,15 @@ https://yashkumarsahu789.github.io/seoexpert/
 
 ### One-time GitHub setup (required)
 
-1. Open **Settings → Pages**
-2. **Build and deployment → Source:** choose **Deploy from a branch**
-3. **Branch:** `gh-pages` / **`/ (root)`**
-4. Save, then push to `main` or run **Actions → Deploy GitHub Pages → Run workflow**
+1. Open repo **Settings → Pages**
+2. **Build and deployment → Source:** `Deploy from a branch`
+3. **Branch:** `main` and folder **`/docs`**
+4. Click **Save**
 
-The site must NOT deploy from `main` branch root — that serves raw source and shows a blank page.
+Do **NOT** use `/ (root)` — that serves raw source code and shows a blank page.
+
+After saving, wait 1–2 minutes and open:
+https://yashkumarsahu789.github.io/seoexpert/
 
 ## Firebase Deploy
 
