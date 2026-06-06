@@ -1,3 +1,10 @@
+import {
+  applyInfrastructureOptimizations,
+  generateRobotsTxt,
+  generateSitemapXml,
+  listInfrastructureFixes,
+} from './infrastructurePatchService.js';
+
 export function deriveSiteName(url) {
   const hostname = new URL(url).hostname.replace(/^www\./i, '');
   const base = hostname.split('.')[0];
@@ -90,7 +97,8 @@ export function applySeoTemplates(html, auditData) {
     result = result.replace(/<head([^>]*)>/i, (match) => `${match}\n    ${insertions.join('\n    ')}`);
   }
 
-  return result;
+  const infra = applyInfrastructureOptimizations(result, auditData);
+  return infra.html;
 }
 
 function listFixableIssues(auditData) {
@@ -130,16 +138,56 @@ export function generateSeoPatches(auditData) {
 
   const fixable = listFixableIssues(auditData);
   const { siteName, rawTitle } = buildSeoTemplates(auditData.url, auditData.seoContent);
+  const infraPreview = applyInfrastructureOptimizations(DEFAULT_HTML, auditData);
+  const infraFixes = listInfrastructureFixes(
+    auditData.infrastructure || infraPreview.signals,
+    auditData.seoContent?.businessInfo
+  );
+
+  const patches = [
+    {
+      path: 'index.html',
+      mode: 'template',
+      auditData,
+      fallbackContent: applySeoTemplates(DEFAULT_HTML, auditData),
+    },
+  ];
+
+  const signals = auditData.infrastructure || infraPreview.signals;
+  if (!signals.hasRobotsTxt) {
+    patches.push({
+      path: 'robots.txt',
+      mode: 'content',
+      content: generateRobotsTxt(auditData.url),
+    });
+  }
+
+  if (!signals.hasSitemap) {
+    patches.push({
+      path: 'sitemap.xml',
+      mode: 'content',
+      content: generateSitemapXml(auditData.url, signals.internalPaths || ['/']),
+    });
+  }
+
+  patches.push(
+    {
+      path: 'vercel.json',
+      mode: 'security-headers',
+      configType: 'vercel',
+    },
+    {
+      path: 'firebase.json',
+      mode: 'security-headers',
+      configType: 'firebase',
+    }
+  );
+
+  const allFixes = [...fixable, ...infraFixes];
 
   return {
-    patches: [
-      {
-        path: 'index.html',
-        mode: 'template',
-        auditData,
-        fallbackContent: applySeoTemplates(DEFAULT_HTML, auditData),
-      },
-    ],
-    summary: `Custom SEO patch for ${siteName}: "${rawTitle}" → ${fixable.join(', ')}`,
+    patches,
+    infrastructureFixes: infraPreview.fixes,
+    summary: `Autonomous SEO surgery for ${siteName}: "${rawTitle}" → ${allFixes.join(', ') || 'meta tags'}`,
   };
 }

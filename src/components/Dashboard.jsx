@@ -26,11 +26,30 @@ const TECH_ICONS = {
   default: Cpu,
 };
 
+function getSeverityStyle(severity) {
+  if (severity === 'Critical') return 'border-red-500/40 bg-red-500/10 text-red-200';
+  if (severity === 'High') return 'border-orange-500/30 bg-orange-500/10 text-orange-200';
+  return 'border-amber-500/20 bg-amber-500/5 text-amber-200';
+}
+
 function getTechIcon(name) {
   for (const [key, Icon] of Object.entries(TECH_ICONS)) {
     if (name.toLowerCase().includes(key.toLowerCase())) return Icon;
   }
   return TECH_ICONS.default;
+}
+
+function StatusBadge({ ok, label }) {
+  return (
+    <div
+      className={`flex items-center justify-between rounded-lg border px-3 py-2 text-sm ${
+        ok ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200' : 'border-red-500/30 bg-red-500/10 text-red-200'
+      }`}
+    >
+      <span>{label}</span>
+      <span className="font-mono text-xs">{ok ? '✓ OK' : '✗ Missing'}</span>
+    </div>
+  );
 }
 
 function ScoreRing({ label, score, color }) {
@@ -74,6 +93,9 @@ export default function Dashboard() {
   const [githubRepo, setGithubRepo] = useState('yashkumarsahu789/seoexpert');
   const [customTitle, setCustomTitle] = useState('');
   const [customDescription, setCustomDescription] = useState('');
+  const [businessPhone, setBusinessPhone] = useState('');
+  const [businessHours, setBusinessHours] = useState('Mo-Sa 09:00-20:00');
+  const [businessAddress, setBusinessAddress] = useState('');
   const [patchLoading, setPatchLoading] = useState(false);
   const [patchResult, setPatchResult] = useState(null);
   const [patchError, setPatchError] = useState(null);
@@ -166,6 +188,12 @@ export default function Dashboard() {
           seoContent: {
             customTitle: customTitle.trim(),
             customDescription: customDescription.trim(),
+          },
+          businessInfo: {
+            name: customTitle.trim(),
+            telephone: businessPhone.trim(),
+            openingHours: businessHours.trim(),
+            address: businessAddress.trim(),
           },
         }),
       });
@@ -279,20 +307,71 @@ export default function Dashboard() {
               </button>
             </div>
 
-            <div className="flex flex-wrap justify-center gap-8 rounded-2xl border border-slate-800 bg-slate-900/40 p-8">
-              {auditData.lighthouse.scores.performance !== null ? (
-                <>
-                  <ScoreRing label="Performance" score={auditData.lighthouse.scores.performance} color="#f59e0b" />
-                  <ScoreRing label="Accessibility" score={auditData.lighthouse.scores.accessibility} color="#3b82f6" />
-                  <ScoreRing label="SEO" score={auditData.lighthouse.scores.seo} color="#10b981" />
-                </>
-              ) : (
-                <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-6 py-4 text-sm text-amber-200">
-                  Browser audit mode — meta tags, headings, and tech stack analyzed live.
-                  {auditData.lighthouse.note ? ` ${auditData.lighthouse.note}` : ''}
+            <section className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
+              <div className="mb-5 flex items-center gap-2">
+                <Zap className="h-5 w-5 text-amber-400" />
+                <h3 className="text-lg font-semibold">Live Command Center</h3>
+              </div>
+
+              <div className="grid gap-4 lg:grid-cols-3">
+                <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+                  <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    Zone 1 · Tech & Performance
+                  </p>
+                  {auditData.lighthouse.scores.performance !== null ? (
+                    <div className="flex justify-around gap-2">
+                      <ScoreRing label="Perf" score={auditData.lighthouse.scores.performance} color="#f59e0b" />
+                      <ScoreRing label="A11y" score={auditData.lighthouse.scores.accessibility} color="#3b82f6" />
+                      <ScoreRing label="SEO" score={auditData.lighthouse.scores.seo} color="#10b981" />
+                    </div>
+                  ) : (
+                    <p className="text-sm text-amber-200">Lite audit — Firebase backend par full Lighthouse scores.</p>
+                  )}
+                  <p className="mt-3 text-xs text-slate-500">
+                    Theme: {auditData.expert?.detectedTheme || 'Detecting…'}
+                  </p>
                 </div>
-              )}
-            </div>
+
+                <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+                  <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    Zone 2 · Google Crawler Readiness
+                  </p>
+                  <div className="space-y-2">
+                    <StatusBadge label="robots.txt" ok={auditData.infrastructure?.hasRobotsTxt} />
+                    <StatusBadge label="sitemap.xml" ok={auditData.infrastructure?.hasSitemap} />
+                    <StatusBadge label="Canonical Tag" ok={auditData.infrastructure?.hasCanonical} />
+                    <StatusBadge
+                      label="DNS Preconnect"
+                      ok={auditData.infrastructure?.hasDnsPrefetch && auditData.infrastructure?.hasPreconnect}
+                    />
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+                  <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    Zone 3 · Trust & Local SEO
+                  </p>
+                  <div className="space-y-2">
+                    <StatusBadge label="JSON-LD Schema" ok={auditData.infrastructure?.hasSchema} />
+                    <StatusBadge
+                      label="OpenGraph Tags"
+                      ok={
+                        auditData.lighthouse.metaTags.openGraph.titlePresent &&
+                        auditData.lighthouse.metaTags.openGraph.descriptionPresent
+                      }
+                    />
+                    <StatusBadge
+                      label="Lazy Images"
+                      ok={!auditData.infrastructure?.imagesWithoutLazy}
+                    />
+                    <StatusBadge
+                      label="Script Defer"
+                      ok={!auditData.infrastructure?.blockingScriptCount}
+                    />
+                  </div>
+                </div>
+              </div>
+            </section>
 
             <div className="grid gap-6 lg:grid-cols-2">
               <section className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
@@ -300,6 +379,15 @@ export default function Dashboard() {
                   <Cpu className="h-5 w-5 text-emerald-400" />
                   <h3 className="text-lg font-semibold">Detected Tech Stack</h3>
                 </div>
+
+                {auditData.expert && (
+                  <div className="mb-5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
+                    <p className="text-xs uppercase tracking-wider text-emerald-400/80">Detected Theme</p>
+                    <p className="mt-1 font-semibold text-emerald-100">{auditData.expert.detectedTheme}</p>
+                    <p className="mt-3 text-xs uppercase tracking-wider text-slate-500">Present Top SEO Strategy (2026)</p>
+                    <p className="mt-1 text-sm text-slate-300">{auditData.expert.currentTopStrategyForThisTheme}</p>
+                  </div>
+                )}
 
                 {auditData.techStack.technologies.length === 0 ? (
                   <p className="text-sm text-slate-500">
@@ -334,26 +422,57 @@ export default function Dashboard() {
               <section className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
                 <div className="mb-5 flex items-center gap-2">
                   <AlertTriangle className="h-5 w-5 text-amber-400" />
-                  <h3 className="text-lg font-semibold">Critical SEO Report</h3>
+                  <h3 className="text-lg font-semibold">Expert SEO Matrix Report</h3>
                 </div>
 
-                <ul className="space-y-3">
-                  {auditData.seoIssues.map((issue) => (
-                    <li
-                      key={issue}
-                      className="flex items-start gap-3 rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-200"
-                    >
-                      <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
-                      {issue}
-                    </li>
-                  ))}
-                  {auditData.seoIssues.length === 0 && (
-                    <li className="flex items-start gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-3 text-sm text-emerald-200">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
-                      No critical SEO issues detected
-                    </li>
-                  )}
-                </ul>
+                {auditData.expert?.suggestions?.length > 0 ? (
+                  <ul className="space-y-3">
+                    {auditData.expert.suggestions.map((item) => (
+                      <li
+                        key={item.id}
+                        className={`rounded-xl border px-4 py-3 text-sm ${getSeverityStyle(item.severity)}`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="font-medium">{item.issue}</span>
+                          <span className="shrink-0 rounded-full border border-current px-2 py-0.5 text-[10px] uppercase">
+                            {item.severity}
+                          </span>
+                        </div>
+                        <p className="mt-2 text-xs opacity-90">Status: MISSING ❌</p>
+                        <p className="mt-1 text-xs text-slate-400">{item.fix}</p>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <ul className="space-y-3">
+                    {auditData.seoIssues.map((issue) => (
+                      <li
+                        key={issue}
+                        className="flex items-start gap-3 rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-200"
+                      >
+                        <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
+                        {issue}
+                      </li>
+                    ))}
+                    {auditData.seoIssues.length === 0 && (
+                      <li className="flex items-start gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-3 text-sm text-emerald-200">
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
+                        All matrix checks passed for this theme
+                      </li>
+                    )}
+                  </ul>
+                )}
+
+                {auditData.expert?.passedChecks?.length > 0 && (
+                  <div className="mt-4 space-y-2 border-t border-slate-800 pt-4">
+                    <p className="text-xs uppercase tracking-wider text-slate-500">Passed Checks ✓</p>
+                    {auditData.expert.passedChecks.slice(0, 4).map((check) => (
+                      <p key={check.id} className="text-xs text-emerald-400/90">
+                        ✓ {check.label}
+                      </p>
+                    ))}
+                  </div>
+                )}
 
                 <div className="mt-6 space-y-2 border-t border-slate-800 pt-4 text-xs text-slate-500">
                   <p>Meta Title: {auditData.lighthouse.metaTags.title.present ? '✓' : '✗ Missing'}</p>
@@ -381,7 +500,7 @@ export default function Dashboard() {
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-slate-500">
-                    Website Title (meta title)
+                    Website Title (meta title + schema name)
                   </label>
                   <input
                     type="text"
@@ -401,6 +520,45 @@ export default function Dashboard() {
                     rows={3}
                     placeholder="e.g. LifeSolveNow helps local shopkeepers go online with easy websites, SEO, and digital marketing."
                     className="w-full resize-none rounded-xl border border-slate-700 bg-slate-950/60 px-4 py-3 text-sm outline-none focus:border-emerald-500/50"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-4 grid gap-4 md:grid-cols-3">
+                <div>
+                  <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-slate-500">
+                    Mobile Number (LocalBusiness schema)
+                  </label>
+                  <input
+                    type="tel"
+                    value={businessPhone}
+                    onChange={(e) => setBusinessPhone(e.target.value)}
+                    placeholder="+91 98765 43210"
+                    className="w-full rounded-xl border border-slate-700 bg-slate-950/60 px-4 py-3 text-sm outline-none focus:border-emerald-500/50"
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-slate-500">
+                    Shop Timing
+                  </label>
+                  <input
+                    type="text"
+                    value={businessHours}
+                    onChange={(e) => setBusinessHours(e.target.value)}
+                    placeholder="Mo-Sa 09:00-20:00"
+                    className="w-full rounded-xl border border-slate-700 bg-slate-950/60 px-4 py-3 text-sm outline-none focus:border-emerald-500/50"
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-slate-500">
+                    Location / Address
+                  </label>
+                  <input
+                    type="text"
+                    value={businessAddress}
+                    onChange={(e) => setBusinessAddress(e.target.value)}
+                    placeholder="Shop 12, Main Market, Delhi"
+                    className="w-full rounded-xl border border-slate-700 bg-slate-950/60 px-4 py-3 text-sm outline-none focus:border-emerald-500/50"
                   />
                 </div>
               </div>
@@ -451,10 +609,15 @@ export default function Dashboard() {
                 ) : (
                   <>
                     <Rocket className="h-5 w-5" />
-                    Authorize Patch & Deploy
+                    Fix Entire Ecosystem & Deploy to Live Server
                   </>
                 )}
               </button>
+
+              <p className="mt-3 text-xs text-slate-500">
+                One-click surgery: canonical, DNS preconnect, script defer, speculation rules, lazy images,
+                robots.txt, sitemap.xml, security headers — bina AI key, direct GitHub push.
+              </p>
 
               {patchError && (
                 <div className="mt-4 flex items-start gap-3 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">

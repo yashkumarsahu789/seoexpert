@@ -78,7 +78,7 @@ app.post('/api/patch-code', async (req, res) => {
 
 app.post('/api/orchestrate', async (req, res) => {
   try {
-    const { auditData, token, repo, branch = 'main', seoContent } = req.body;
+    const { auditData, token, repo, branch = 'main', seoContent, businessInfo } = req.body;
 
     if (!auditData) return res.status(400).json({ error: 'auditData is required' });
     if (!token) return res.status(400).json({ error: 'GitHub PAT is required' });
@@ -90,7 +90,10 @@ app.post('/api/orchestrate', async (req, res) => {
       return res.status(400).json({ error: 'Custom meta description is required' });
     }
 
-    const auditWithContent = { ...auditData, seoContent };
+    const auditWithContent = {
+      ...auditData,
+      seoContent: { ...seoContent, businessInfo },
+    };
     const auditSummary = formatAuditForAI(auditWithContent);
     const patchResult = generateSeoPatches(auditWithContent);
 

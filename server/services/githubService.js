@@ -1,5 +1,6 @@
 import { Octokit } from '@octokit/rest';
 import { applySeoTemplates } from './templatePatchService.js';
+import { generateSecurityHeadersPatch } from './infrastructurePatchService.js';
 
 function parseRepo(repoInput) {
   const trimmed = repoInput.trim().replace(/^https:\/\/github\.com\//i, '').replace(/\.git$/, '');
@@ -29,6 +30,12 @@ async function getFileContent(octokit, owner, repo, path, ref) {
 function applyPatch(existingContent, patch) {
   if (patch.mode === 'template') {
     return applySeoTemplates(existingContent, patch.auditData);
+  }
+  if (patch.mode === 'content' && patch.content) {
+    return patch.content;
+  }
+  if (patch.mode === 'security-headers') {
+    return generateSecurityHeadersPatch(existingContent, patch.configType);
   }
   if (patch.content) {
     return patch.content;
@@ -69,11 +76,21 @@ export async function pushSeoPatches({ token, repo, branch = 'main', patches }) 
 
   for (const patch of patches) {
     const existing = await getFileContent(octokit, owner, repoName, patch.path, branch);
-    const newContent = existing
-      ? applyPatch(existing.content, patch)
-      : patch.fallbackContent || patch.content || (() => {
+    let newContent;
+
+    if (patch.mode === 'security-headers') {
+      newContent = generateSecurityHeadersPatch(existing?.content || '{}', patch.configType);
+      if (!newContent) continue;
+    } else if (existing) {
+      newContent = applyPatch(existing.content, patch);
+    } else {
+      newContent =
+        patch.fallbackContent ||
+        patch.content ||
+        (() => {
           throw new Error(`Cannot create ${patch.path} without template fallback`);
         })();
+    }
 
     const { data: blob } = await octokit.git.createBlob({
       owner,

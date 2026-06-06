@@ -1,8 +1,36 @@
 import lighthouse from 'lighthouse';
 import * as chromeLauncher from 'chrome-launcher';
 import Wappalyzer from 'wappalyzer';
+import { generateExpertSuggestions } from './seoExpertMatrix.js';
+import { buildInfrastructureSignals } from './infrastructurePatchService.js';
 
 const AUDIT_TIMEOUT_MS = 120000;
+
+async function fetchPageHtml(url) {
+  try {
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'SEOExpertBot/1.0' },
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!res.ok) return '';
+    return await res.text();
+  } catch {
+    return '';
+  }
+}
+
+async function checkCrawlerFiles(url) {
+  const origin = new URL(url).origin;
+  const [robotsRes, sitemapRes] = await Promise.allSettled([
+    fetch(`${origin}/robots.txt`, { signal: AbortSignal.timeout(8000) }),
+    fetch(`${origin}/sitemap.xml`, { signal: AbortSignal.timeout(8000) }),
+  ]);
+
+  return {
+    hasRobotsTxt: robotsRes.status === 'fulfilled' && robotsRes.value.ok,
+    hasSitemap: sitemapRes.status === 'fulfilled' && sitemapRes.value.ok,
+  };
+}
 
 function normalizeUrl(input) {
   const trimmed = input.trim();
@@ -225,7 +253,7 @@ export async function auditWebsite(rawUrl) {
       ]),
     ];
 
-    return {
+    const baseResult = {
       url,
       timestamp: new Date().toISOString(),
       techStack: {
@@ -240,6 +268,20 @@ export async function auditWebsite(rawUrl) {
       },
       seoIssues: combinedIssues,
       success: !lighthouseData.error || tech.technologies.length > 0,
+    };
+
+    const [html, crawlerFiles] = await Promise.all([fetchPageHtml(url), checkCrawlerFiles(url)]);
+    const infrastructure = {
+      ...buildInfrastructureSignals(html, url),
+      ...crawlerFiles,
+    };
+    const expert = generateExpertSuggestions({ ...baseResult, infrastructure }, html);
+
+    return {
+      ...baseResult,
+      infrastructure,
+      seoIssues: expert.seoIssues,
+      expert,
     };
   })();
 

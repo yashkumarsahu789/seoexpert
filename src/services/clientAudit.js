@@ -1,3 +1,6 @@
+import { generateExpertSuggestions } from './seoExpertMatrix.js';
+import { buildInfrastructureSignals } from './infrastructureSignals.js';
+
 function normalizeUrl(input) {
   const trimmed = input.trim();
   if (!/^https?:\/\//i.test(trimmed)) return `https://${trimmed}`;
@@ -135,7 +138,11 @@ export async function auditWebsiteClient(urlInput) {
   }
 
   const html = await fetchHtml(url);
-  return parseAuditFromHtml(html, url);
+  const base = parseAuditFromHtml(html, url);
+  const infrastructure = buildInfrastructureSignals(html, url);
+  const withInfra = { ...base, infrastructure };
+  const expert = generateExpertSuggestions(withInfra, html);
+  return { ...withInfra, seoIssues: expert.seoIssues, expert };
 }
 
 export function shouldUseClientAudit() {
