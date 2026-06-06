@@ -14,6 +14,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { API_BASE } from '../lib/firebase.js';
+import { auditWebsiteClient, shouldUseClientAudit } from '../services/clientAudit.js';
 
 const TECH_ICONS = {
   React: Code2,
@@ -84,15 +85,38 @@ export default function Dashboard() {
     setPatchError(null);
 
     try {
+      if (shouldUseClientAudit()) {
+        const data = await auditWebsiteClient(url);
+        setAuditData(data);
+        return;
+      }
+
       const res = await fetch(`${API_BASE}/audit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url }),
       });
-      const data = await res.json();
+
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        throw new Error('Backend returned an invalid response.');
+      }
+
       if (!res.ok) throw new Error(data.error || 'Audit failed');
       setAuditData(data);
     } catch (err) {
+      if (err.message === 'Failed to fetch') {
+        try {
+          const data = await auditWebsiteClient(url);
+          setAuditData(data);
+          return;
+        } catch (fallbackErr) {
+          setError(fallbackErr.message || 'Audit failed');
+          return;
+        }
+      }
       setError(err.message);
     } finally {
       setLoading(false);
@@ -100,6 +124,11 @@ export default function Dashboard() {
   }
 
   async function handlePatchDeploy() {
+    if (shouldUseClientAudit()) {
+      setPatchError('GitHub auto-deploy runs from local backend only. Run: npm run dev on your PC, then use Patch & Deploy.');
+      return;
+    }
+
     setPatchLoading(true);
     setPatchError(null);
     setPatchResult(null);
@@ -217,9 +246,18 @@ export default function Dashboard() {
             </div>
 
             <div className="flex flex-wrap justify-center gap-8 rounded-2xl border border-slate-800 bg-slate-900/40 p-8">
-              <ScoreRing label="Performance" score={auditData.lighthouse.scores.performance} color="#f59e0b" />
-              <ScoreRing label="Accessibility" score={auditData.lighthouse.scores.accessibility} color="#3b82f6" />
-              <ScoreRing label="SEO" score={auditData.lighthouse.scores.seo} color="#10b981" />
+              {auditData.lighthouse.scores.performance !== null ? (
+                <>
+                  <ScoreRing label="Performance" score={auditData.lighthouse.scores.performance} color="#f59e0b" />
+                  <ScoreRing label="Accessibility" score={auditData.lighthouse.scores.accessibility} color="#3b82f6" />
+                  <ScoreRing label="SEO" score={auditData.lighthouse.scores.seo} color="#10b981" />
+                </>
+              ) : (
+                <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-6 py-4 text-sm text-amber-200">
+                  Browser audit mode — meta tags, headings, and tech stack analyzed live.
+                  {auditData.lighthouse.note ? ` ${auditData.lighthouse.note}` : ''}
+                </div>
+              )}
             </div>
 
             <div className="grid gap-6 lg:grid-cols-2">

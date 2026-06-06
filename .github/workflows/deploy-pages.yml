@@ -32,8 +32,6 @@ jobs:
 
       - name: Build site
         run: npm run build
-        env:
-          VITE_API_URL: https://us-central1-manager-fc26f.cloudfunctions.net/api
 
       - name: Prepare GitHub Pages artifact
         run: |
