@@ -46,17 +46,21 @@ No AI key. No network call. Instant patch → GitHub push.
 
 https://yashkumarsahu789.github.io/seoexpert/
 
-### One-time GitHub setup (required)
+### GitHub Pages setup
 
-1. Open repo **Settings → Pages**
-2. **Build and deployment → Source:** `Deploy from a branch`
-3. **Branch:** `main` and folder **`/docs`**
-4. Click **Save**
+**Source must be:** Settings → Pages → **GitHub Actions** (not "Deploy from branch").
 
-Do **NOT** use `/ (root)` — that serves raw source code and shows a blank page.
+The workflow `.github/workflows/deploy-pages.yml` builds `dist/` and publishes it via `deploy-pages@v4`.
 
-After saving, wait 1–2 minutes and open:
-https://yashkumarsahu789.github.io/seoexpert/
+After a green deploy job, page source should contain:
+
+```html
+<script src="/seoexpert/assets/index-....js"></script>
+```
+
+If you still see `/src/main.jsx`, the Actions deploy did not publish (check the **deploy** job, not just **build**).
+
+**Fallback:** Settings → Pages → Branch `main` → folder **`/docs`** (built files are committed in `docs/`).
 
 ## Firebase Deploy
 
