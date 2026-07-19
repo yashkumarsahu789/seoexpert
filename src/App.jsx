@@ -33,10 +33,12 @@ const PERSONAL_FEATURE_PATHS = new Set([
   '/whatsapp',
 ])
 
+const routerBasename = import.meta.env.BASE_URL.replace(/\/$/, '')
+
 export default function App() {
   return (
     <WorkflowAppProvider>
-      <BrowserRouter>
+      <BrowserRouter basename={routerBasename}>
         <Routes>
           <Route element={<AppLayout personalPaths={PERSONAL_FEATURE_PATHS} />}>
             <Route index element={<FolderHubPage />} />

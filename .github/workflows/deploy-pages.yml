@@ -4,7 +4,12 @@ on:
   push:
     branches: [main]
     paths:
-      - 'tools/**'
+      - 'src/**'
+      - 'public/**'
+      - 'index.html'
+      - 'vite.config.js'
+      - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/deploy-pages.yml'
   workflow_dispatch:
 
@@ -20,9 +25,19 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: tools
+    env:
+      GITHUB_PAGES: 'true'
+      VITE_SUPABASE_URL: https://sbdlfyfkpatnxkrmslvq.supabase.co
+      # Public Supabase anon key — same as browser bundle (RLS-protected)
+      VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNiZGxmeWZrcGF0bnhrcm1zbHZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5OTM2NjMsImV4cCI6MjA4OTU2OTY2M30.eLqakT_Yus8i17cDzJWRGdgvQMSDzvuqHnvjb3AeVPE
+      VITE_N8N_BASE_URL: https://lifesolvenow.onrender.com
+      VITE_N8N_AUDIT_WEBHOOK_URL: https://lifesolvenow.onrender.com/webhook/62d11c24-940d-456d-a512-5d27089c0a69
+      VITE_N8N_KEEPALIVE_WEBHOOK_URL: https://lifesolvenow.onrender.com/webhook/render-lifetime-guard-ping
+      VITE_N8N_BULK_LLM_WEBHOOK_URL: https://lifesolvenow.onrender.com/webhook/bulk-llm-enqueue
+      VITE_AI_ENABLED: 'true'
+      VITE_GEMINI_MODEL: gemini-flash-latest
+      VITE_SHOP_BASE_URL: https://shop.LifeSolveNow.com
+      VITE_SITE_NAME: LifeSolveNow
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -32,12 +47,12 @@ jobs:
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: tools/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Build site
+      - name: Build main app
         run: npm run build
 
       - name: Prepare GitHub Pages artifact
@@ -48,7 +63,7 @@ jobs:
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: tools/dist
+          path: dist
 
   deploy:
     needs: build

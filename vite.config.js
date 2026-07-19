@@ -6,6 +6,7 @@ const N8N_TARGET =
 
 export default defineConfig({
   plugins: [react()],
+  base: process.env.GITHUB_PAGES === 'true' ? '/seoexpert/' : '/',
   server: {
     proxy: {
       '/api/n8n': {
