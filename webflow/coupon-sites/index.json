@@ -1,0 +1,17 @@
+{
+  "updated_at": "2026-06-25T00:00:00.000Z",
+  "public_base": "https://shop.LifeSolveNow.com/coupon-sites",
+  "sites": [
+    {
+      "slug": "sunlu-kanny-promo",
+      "brand": "Sunlu",
+      "promo_code": "KANNY",
+      "discount": "10% OFF",
+      "page_type": "coupon",
+      "html": "sunlu-kanny-promo.html",
+      "embed": "webflow-home-embed.html",
+      "config": "sunlu-kanny.json",
+      "public_url": "https://shop.LifeSolveNow.com/coupon-sites/sunlu-kanny-promo.html"
+    }
+  ]
+}

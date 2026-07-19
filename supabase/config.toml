@@ -1,0 +1,6 @@
+# pg_net trigger calls this function without a user JWT — keep verify_jwt off
+[functions.process-llm-task]
+verify_jwt = false
+
+[functions.folder-ai]
+verify_jwt = false

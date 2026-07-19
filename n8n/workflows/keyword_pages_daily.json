@@ -1,0 +1,52 @@
+{
+  "_meta": {
+    "id": "keyword_pages_daily",
+    "description": "Daily 1 keyword page per 24h → GitHub → Pages deploy",
+    "activate": true,
+    "snippetRefs": {
+      "Keyword Pages Run": "keyword-pages-daily-run.js"
+    }
+  },
+  "name": "Keyword Pages Daily",
+  "nodes": [
+    {
+      "id": "schedule-kp",
+      "name": "Every Day 8 AM IST",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300],
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "30 2 * * *" }]
+        }
+      }
+    },
+    {
+      "id": "code-kp",
+      "name": "Keyword Pages Run",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300],
+      "parameters": { "mode": "runOnceForAllItems", "jsCode": "" }
+    },
+    {
+      "id": "webhook-kp",
+      "name": "Keyword Pages Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 480],
+      "webhookId": "keyword-pages-run",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "keyword-pages-run",
+        "responseMode": "lastNode",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Every Day 8 AM IST": { "main": [[{ "node": "Keyword Pages Run", "type": "main", "index": 0 }]] },
+    "Keyword Pages Webhook": { "main": [[{ "node": "Keyword Pages Run", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}

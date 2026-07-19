@@ -7,11 +7,15 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "daily:keyword-page": "node ../scripts/daily-keyword-page.mjs",
+    "daily:keyword-page:dry": "node ../scripts/daily-keyword-page.mjs --dry-run"
   },
   "dependencies": {
+    "firebase": "^11.10.0",
     "react": "^19.2.6",
-    "react-dom": "^19.2.6"
+    "react-dom": "^19.2.6",
+    "react-router-dom": "^7.18.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

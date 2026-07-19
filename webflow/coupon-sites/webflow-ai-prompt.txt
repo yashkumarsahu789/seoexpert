@@ -1,0 +1,13 @@
+Build a professional coupon promo landing page for Sunlu 3D printing brand.
+
+Requirements:
+- Promo code: KANNY — 10% OFF at checkout
+- Hero H1: Sunlu Promo Code "KANNY" — Get 10% OFF On Your Products
+- Large visible coupon code box showing KANNY
+- Primary CTA button: Shop now (link placeholder https://shop.LifeSolveNow.com)
+- Sections: Why Sunlu (3 benefits), How to use code KANNY (4 steps), FAQ (3 questions)
+- Style: clean modern like a promo codes site, orange accent #e85d04, white sections, mobile responsive
+- SEO: title and meta description with keywords "Sunlu promo code KANNY" and "10% off"
+- Single homepage focused landing — no login, no complex nav
+
+Target audience: shoppers searching for Sunlu discount codes.

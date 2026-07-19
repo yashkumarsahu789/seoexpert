@@ -1,0 +1,47 @@
+{
+  "_meta": {
+    "id": "website_audit_daily",
+    "description": "Daily keywords + rank check for saved audit sites (no full audit)",
+    "activate": true,
+    "snippetRefs": {
+      "Fetch Saved Sites": "audit-daily-fetch-sites.js",
+      "Rank Check": "audit-rank-daily-run.js"
+    }
+  },
+  "name": "Website Rank Daily",
+  "nodes": [
+    {
+      "id": "schedule-daily",
+      "name": "Every Day 6 AM IST",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300],
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "30 0 * * *" }]
+        }
+      }
+    },
+    {
+      "id": "code-fetch",
+      "name": "Fetch Saved Sites",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300],
+      "parameters": { "mode": "runOnceForAllItems", "jsCode": "" }
+    },
+    {
+      "id": "code-rank",
+      "name": "Rank Check",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 300],
+      "parameters": { "mode": "runOnceForEachItem", "jsCode": "" }
+    }
+  ],
+  "connections": {
+    "Every Day 6 AM IST": { "main": [[{ "node": "Fetch Saved Sites", "type": "main", "index": 0 }]] },
+    "Fetch Saved Sites": { "main": [[{ "node": "Rank Check", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}

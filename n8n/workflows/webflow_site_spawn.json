@@ -1,0 +1,51 @@
+{
+  "_meta": {
+    "id": "webflow_site_spawn",
+    "description": "User requirement → AI JSON → Webflow CMS + publish → brand.webflow.io",
+    "activate": true,
+    "snippetRefs": {
+      "Spawn Site": "webflow-site-spawn.js"
+    }
+  },
+  "name": "Webflow Site Spawn",
+  "nodes": [
+    {
+      "id": "webhook-webflow",
+      "name": "Webflow Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "webflow-site-spawn",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "webflow-site-spawn",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "code-webflow-spawn",
+      "name": "Spawn Site",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300],
+      "parameters": { "mode": "runOnceForAllItems", "jsCode": "" }
+    },
+    {
+      "id": "respond-webflow",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [720, 300],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      }
+    }
+  ],
+  "connections": {
+    "Webflow Webhook": { "main": [[{ "node": "Spawn Site", "type": "main", "index": 0 }]] },
+    "Spawn Site": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}

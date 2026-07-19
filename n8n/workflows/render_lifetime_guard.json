@@ -1,0 +1,233 @@
+{
+  "_meta": {
+    "id": "render_lifetime_guard",
+    "description": "Render free-tier lifetime guard — heartbeat every 5 min + external ping webhook",
+    "activate": true,
+    "n8nId": "puYuFSrwPYJRHr9F",
+    "snippetRefs": {
+      "Build Heartbeat": "lifetime-guard-check.js",
+      "Save Heartbeat": "save-heartbeat.js"
+    }
+  },
+  "name": "Render Lifetime Guard",
+  "nodes": [
+    {
+      "id": "schedule-5min",
+      "name": "Every 5 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        200
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "webhook-ping",
+      "name": "Keep-Alive Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        420
+      ],
+      "webhookId": "render-lifetime-guard-ping",
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "render-lifetime-guard-ping",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "code-heartbeat",
+      "name": "Build Heartbeat",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        300
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": ""
+      }
+    },
+    {
+      "id": "http-healthz",
+      "name": "Ping Healthz",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        760,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.ping_url }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "code-save-heartbeat",
+      "name": "Save Heartbeat",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        300
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": ""
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "if-webhook",
+      "name": "Is External Ping",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1240,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-webhook",
+              "leftValue": "={{ $('Build Heartbeat').item.json.source }}",
+              "rightValue": "n8n_schedule",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "respond-alive",
+      "name": "Respond Alive",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1480,
+        420
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, status: 'alive', source: $('Build Heartbeat').item.json.source, pinged_at: $('Build Heartbeat').item.json.last_ping_at, instance: $('Build Heartbeat').item.json.instance_url } }}"
+      }
+    },
+    {
+      "id": "noop-schedule-end",
+      "name": "Schedule Done",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1480,
+        200
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Every 5 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Build Heartbeat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Keep-Alive Webhook": {
+      "main": [
+        [
+          {
+            "node": "Build Heartbeat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Heartbeat": {
+      "main": [
+        [
+          {
+            "node": "Ping Healthz",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ping Healthz": {
+      "main": [
+        [
+          {
+            "node": "Save Heartbeat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Heartbeat": {
+      "main": [
+        [
+          {
+            "node": "Is External Ping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is External Ping": {
+      "main": [
+        [
+          {
+            "node": "Respond Alive",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Schedule Done",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

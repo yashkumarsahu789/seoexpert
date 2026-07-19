@@ -1,0 +1,16 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Tools app — open anon access (same pattern as Supabase anon policies on main app).
+    // Tighten with Firebase Auth before public production.
+    match /ai_center_tasks/{id} {
+      allow read, write: if true;
+    }
+    match /ai_agent_usage/{id} {
+      allow read, write: if true;
+    }
+    match /keyword_pages/{id} {
+      allow read, write: if true;
+    }
+  }
+}

@@ -1,0 +1,45 @@
+.sunlu-coupon-sticky { position: sticky; top: 0; z-index: 9999; background: #1a1a1a; color: #fff; padding: 10px 16px; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15); }
+.sunlu-coupon-inner { max-width: 1140px; margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 16px; font-family: Lato, sans-serif; font-size: 15px; }
+.sunlu-coupon-code { background: #46aa92; color: #fff; padding: 4px 12px; border-radius: 6px; font-weight: 700; letter-spacing: 1px; }
+.sunlu-copy-btn { background: #fff; color: #1a1a1a; border: none; border-radius: 6px; padding: 8px 16px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.sunlu-shop-btn { background: #46aa92; color: #fff; text-decoration: none; border-radius: 6px; padding: 8px 16px; font-size: 14px; font-weight: 600; }
+.div-block-3 { max-width: 1300px; margin-left: auto; margin-right: auto; padding-left: 20px; padding-right: 20px; box-sizing: border-box; }
+.heading-56 { font-size: clamp(22px, 4.5vw, 38px); line-height: 1.2; margin-top: 40px; }
+.heading-57 { font-size: clamp(18px, 3.5vw, 32px); color: #46aa92; }
+.paragraph-24 { font-size: clamp(15px, 2.5vw, 18px); line-height: 1.55; }
+.paragraph-25 { font-size: clamp(15px, 2.5vw, 18px); line-height: 1.55; padding-top: 24px; }
+.image-15 { max-width: 100%; width: 100%; height: auto; margin: 16px auto; display: block; }
+.image-7 { max-width: 100%; width: 100%; height: auto; display: block; margin: 0 auto 40px; }
+.button-11 { background-color: #46aa92; border-radius: 20px; font-size: clamp(15px, 2.5vw, 19px); display: inline-block; text-align: center; margin: 12px 0; }
+.button-12 { background-color: #46aa92; border-radius: 20px; font-size: clamp(15px, 2.5vw, 19px); display: inline-block; text-align: center; margin: 12px 0; }
+.button-13 { background-color: #46aa92; border-radius: 20px; font-size: clamp(15px, 2.5vw, 19px); }
+.navbar-logo-left { background-color: #46aa92; }
+.navbar-logo-left-container { max-width: 100%; margin-left: auto; margin-right: auto; background-color: #46aa92; width: 100%; max-width: 1140px; padding: 16px 20px; }
+.shadow-three { background-color: #46aa92; width: 100%; max-width: 1140px; padding: 16px 20px; }
+.navbar-wrapper-2 { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; max-width: 1140px; margin: 0 auto; }
+.nav-menu-two { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; list-style: none; margin: 0; padding: 0; }
+.nav-link-5 { color: #fff; text-decoration: none; font-family: Lato, sans-serif; font-size: 15px; }
+.team-slider { background-color: #f5f7fa; padding: 24px 20px 40px; overflow: hidden; }
+.team-slide-wrapper { width: 30%; margin-right: 5%; }
+.team-member-image-two { max-width: 100%; width: 100%; height: auto; }
+.section-2 { padding: 20px; }
+.section-3 { padding: 0 20px; }
+.rich-text-block { max-width: 940px; margin: 0 auto; padding: 0 10px; }
+.rich-text-block-4 { max-width: 940px; margin: 0 auto; padding: 0 20px; }
+.footer-dark { background-color: #46aa92; padding: 0 20px; }
+.footer-content { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px; padding: 35px 20px 0; }
+.footer-wrapper { display: flex; flex-wrap: wrap; justify-content: space-between; max-width: 900px; margin: 0 auto; }
+.video-2 { max-width: 100%; margin-bottom: 40px; }
+.heading-6 { text-align: center; color: #46aa92; font-size: clamp(22px, 4vw, 32px); }
+.heading-10 { color: #46aa92; text-align: center; font-size: clamp(20px, 3.5vw, 28px); }
+.link-35 { color: #46aa92; font-size: clamp(16px, 2.5vw, 20px); word-break: break-word; }
+.container-16 { max-width: 1140px; margin: 0 auto; }
+.w-container { max-width: 940px; margin-left: auto; margin-right: auto; padding-left: 20px; padding-right: 20px; }
+.w-row { display: flex; flex-wrap: wrap; margin-left: -10px; margin-right: -10px; }
+.w-col { flex: 1; min-width: 0; padding-left: 10px; padding-right: 10px; }
+.columns-2 { width: 100%; }
+.hero-section { overflow: hidden; }
+.body-copy { margin: 0; overflow-x: hidden; }
+@media screen and (max-width: 991px) { .team-slide-wrapper { width: 47%; margin-right: 6%; } .footer-content { grid-template-columns: 1fr 1fr; gap: 24px; } .navbar-logo-left-container { max-width: 100%; } .nav-menu-two { gap: 6px 12px; } .w-col { flex: 0 0 50%; max-width: 50%; } }
+@media screen and (max-width: 767px) { .sunlu-coupon-inner { flex-direction: column; text-align: center; } .sunlu-copy-btn { width: 100%; max-width: 280px; } .sunlu-shop-btn { width: 100%; max-width: 280px; text-align: center; box-sizing: border-box; } .w-row { display: block; } .w-col { width: 100%; max-width: 100%; float: none; padding-left: 0; padding-right: 0; display: block; } .columns-2 { padding-bottom: 20px; } .heading-56 { margin-top: 16px; } .team-slider { padding: 40px 15px; } .team-slide-wrapper { width: 100%; margin-right: 0; } .footer-dark { padding-left: 15px; padding-right: 15px; } .footer-wrapper { flex-direction: column; align-items: center; } .footer-content { grid-template-columns: 1fr; margin-top: 24px; text-align: center; } .footer-block { align-items: center; } .footer-social-block { justify-content: center; margin-left: 0; } .nav-menu-two { flex-direction: column; align-items: flex-start; width: 100%; padding-bottom: 12px; } .nav-menu-wrapper-2 { width: 100%; } .menu-button-4 { display: block; } .navbar-wrapper-2 { flex-direction: row; flex-wrap: wrap; } .navbar-brand-2 { flex: 0 0 auto; } .rich-text-block { padding: 0 8px; } .paragraph-24 { margin-top: 16px; } .button-11 { width: 100%; box-sizing: border-box; } .button-12 { width: 100%; box-sizing: border-box; } }
+@media screen and (max-width: 479px) { .div-block-3 { padding-left: 12px; padding-right: 12px; } .heading-56 { font-size: 20px; } .heading-57 { font-size: 18px; } .nav-link-5 { padding: 8px 0; display: block; font-size: 14px; } .sunlu-coupon-sticky { padding: 8px 10px; } .sunlu-coupon-inner { font-size: 13px; } .team-block { padding-left: 8px; padding-right: 8px; } .team-block-info { padding-left: 12px; padding-right: 12px; } }

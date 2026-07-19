@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Redirecting…</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #0f172a; color: #e2e8f0; display: grid; place-items: center; min-height: 100vh; margin: 0; text-align: center; padding: 20px; }
+    a { color: #38bdf8; }
+  </style>
+</head>
+<body>
+  <div>
+    <p>Redirecting to official site…</p>
+    <p><a id="link" href="#">Continue</a></p>
+    <p style="font-size:13px;color:#64748b;margin-top:24px"><a href="https://shop.LifeSolveNow.com">LifeSolveNow</a></p>
+  </div>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const to = params.get('to');
+    const allowed = to && /^https:\/\//i.test(to);
+    if (allowed) {
+      document.getElementById('link').href = to;
+      document.getElementById('link').textContent = 'Continue to site →';
+      setTimeout(() => { location.href = to; }, 800);
+    } else {
+      document.body.innerHTML = '<p>Invalid redirect. <a href="/">Go home</a></p>';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+{
+  "_meta": {
+    "id": "shop_indexing_daily",
+    "description": "Daily sitemap index check + Google sitemap ping for shop URLs",
+    "activate": true,
+    "snippetRefs": {
+      "Indexing Run": "shop-indexing-daily-run.js"
+    }
+  },
+  "name": "Shop Indexing Daily",
+  "nodes": [
+    {
+      "id": "schedule-index",
+      "name": "Every Day 4 AM IST",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300],
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "30 22 * * *" }]
+        }
+      }
+    },
+    {
+      "id": "code-index",
+      "name": "Indexing Run",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300],
+      "parameters": { "mode": "runOnceForAllItems", "jsCode": "" }
+    }
+  ],
+  "connections": {
+    "Every Day 4 AM IST": { "main": [[{ "node": "Indexing Run", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}

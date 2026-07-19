@@ -1,0 +1,232 @@
+/* Sunlu Promo Hub — mobile-first responsive (320px → 1440px+) */
+
+html {
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
+body.body-copy {
+  margin: 0;
+  overflow-x: hidden;
+  max-width: 100%;
+  width: 100%;
+}
+
+img,
+video,
+iframe,
+embed {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Layout containers */
+.div-block-3 {
+  width: 100%;
+  max-width: 81.25rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: clamp(0.75rem, 3vw, 1.25rem);
+  padding-right: clamp(0.75rem, 3vw, 1.25rem);
+  box-sizing: border-box;
+}
+
+.w-container,
+.w-layout-blockcontainer {
+  width: 100%;
+  max-width: 58.75rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: clamp(0.75rem, 3vw, 1.25rem);
+  padding-right: clamp(0.75rem, 3vw, 1.25rem);
+  box-sizing: border-box;
+}
+
+.container-16,
+.container-18,
+.container-3 {
+  width: 100%;
+  max-width: 71.25rem;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+}
+
+/* Hero */
+.hero-section {
+  width: 100%;
+  overflow: hidden;
+  padding-bottom: clamp(1rem, 3vw, 2rem);
+}
+
+.hero-section .columns-2,
+.hero-section .w-row {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+  box-sizing: border-box;
+  gap: clamp(1rem, 3vw, 1.5rem);
+}
+
+.hero-section .w-col,
+.hero-section .w-col-6 {
+  flex: 1 1 100%;
+  max-width: 100%;
+  width: 100%;
+  min-width: 0;
+  padding-left: 0;
+  padding-right: 0;
+  box-sizing: border-box;
+}
+
+.hero-section .div-block-3 > div:not(.sunlu-hero-coupon-card) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(1rem, 3vw, 1.5rem);
+  width: 100%;
+}
+
+.hero-section .div-block-3 > div:not(.sunlu-hero-coupon-card) > div {
+  flex: 1 1 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Hero coupon card */
+.sunlu-hero-coupon-card {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 1rem 0;
+  padding: clamp(0.875rem, 3vw, 1.25rem);
+  border-radius: 0.75rem;
+  background: #f0f7f5;
+  border: 1px solid rgba(70, 170, 146, 0.35);
+}
+
+.sunlu-hero-coupon-card .sunlu-copy-btn,
+.sunlu-hero-copy-btn {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Typography */
+.heading-56 {
+  font-size: clamp(1.25rem, 4.5vw, 2.375rem);
+  line-height: 1.2;
+  margin-top: clamp(1rem, 4vw, 2.5rem);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.heading-57 {
+  font-size: clamp(1.125rem, 3.5vw, 2rem);
+  line-height: 1.25;
+  color: #46aa92;
+  word-wrap: break-word;
+}
+
+.heading-6,
+.heading-10,
+.heading-13 {
+  font-size: clamp(1.25rem, 3.5vw, 2rem);
+  line-height: 1.25;
+  word-wrap: break-word;
+}
+
+.heading-6,
+.heading-10 {
+  color: #46aa92;
+  text-align: center;
+}
+
+.paragraph-24,
+.paragraph-25 {
+  font-size: clamp(0.9375rem, 2.5vw, 1.125rem);
+  line-height: 1.55;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.paragraph-25 {
+  padding-top: clamp(1rem, 3vw, 1.5rem);
+}
+
+/* Images */
+.image-15,
+.image-7,
+.team-member-image-two {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.image-15 {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.image-7 {
+  margin-bottom: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+/* Buttons & links */
+.button-11,
+.button-12,
+.button-13 {
+  background-color: #46aa92;
+  border-radius: 1.25rem;
+  font-size: clamp(0.9375rem, 2.5vw, 1.1875rem);
+  display: inline-block;
+  text-align: center;
+  margin: 0.75rem 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  word-wrap: break-word;
+  padding: 0.75rem 1.25rem;
+}
+
+.link-35 {
+  color: #46aa92;
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
+  word-break: break-word;
+  display: inline-block;
+  max-width: 100%;
+}
+
+/* Navbar */
+.navbar-logo-left {
+  width: 100%;
+  background-color: #46aa92;
+}
+
+.navbar-logo-left-container,
+.navbar-logo-left-container.shadow-three {
+  width: 100%;
+  max-width: 71.25rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding: clamp(0.75rem, 2vw, 1rem) clamp(0.75rem, 3vw, 1.25rem);
+  background-color: #46aa92;
+  box-sizing: border-box;
+}
+
+.navbar-wrapper-2 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 71.25rem;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.nav-menu-wrapp

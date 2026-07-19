@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "workflows": {
+    "telegram_time_demo": {
+      "file": "telegram_time_demo.json",
+      "n8nId": "qNkamaT2LblOJIxB",
+      "name": "Telegram Time Demo"
+    },
+    "render_lifetime_guard": {
+      "file": "render_lifetime_guard.json",
+      "n8nId": "B0YbObQOMR1dbfWB",
+      "name": "Render Lifetime Guard"
+    },
+    "website_audit": {
+      "file": "website_audit.json",
+      "n8nId": "LcWsAcUygnLnqMGP",
+      "name": "Website Audit"
+    },
+    "website_audit_daily": {
+      "file": "website_audit_daily.json",
+      "n8nId": "wpc6uFq59yCaV5Ye",
+      "name": "Website Audit Daily"
+    },
+    "requirements_daily_sync": {
+      "file": "requirements_daily_sync.json",
+      "n8nId": "6ALsrZskForYwDYi",
+      "name": "Requirements Daily Sync"
+    },
+    "shop_indexing_daily": {
+      "file": "shop_indexing_daily.json",
+      "name": "Shop Indexing Daily"
+    },
+    "shop_rank_daily": {
+      "file": "shop_rank_daily.json",
+      "name": "Shop Rank Daily"
+    },
+    "shop_rank_webhook": {
+      "file": "shop_rank_webhook.json",
+      "name": "Shop Rank Check"
+    },
+    "bulk_llm_enqueue": {
+      "file": "bulk_llm_enqueue.json",
+      "n8nId": "bB3LfUWl4YTQddPN",
+      "name": "Bulk LLM Enqueue"
+    },
+    "keyword_pages_daily": {
+      "file": "keyword_pages_daily.json",
+      "name": "Keyword Pages Daily"
+    },
+    "keyword_pages_indexing_daily": {
+      "file": "keyword_pages_indexing_daily.json",
+      "name": "Keyword Pages Indexing Daily"
+    },
+    "whatsapp_hello_demo": {
+      "file": "whatsapp_hello_demo.json",
+      "name": "WhatsApp Hello Demo"
+    },
+    "webflow_site_spawn": {
+      "file": "webflow_site_spawn.json",
+      "name": "Webflow Site Spawn"
+    }
+  }
+}

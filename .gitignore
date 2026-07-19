@@ -12,15 +12,12 @@ dist
 dist-ssr
 *.local
 .env
-.env.*
-!.env.example
 
-# Firebase
-.firebase
-firebase-debug.log
-firebase-debug.*.log
-functions/node_modules
-server/node_modules
+# Local / generated
+.cursor/
+.firebase/
+supabase/.temp/
+Untitled
 
 # Editor directories and files
 .vscode/*

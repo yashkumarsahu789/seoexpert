@@ -1,0 +1,34 @@
+{
+  "name": "webflow",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "oxlint",
+    "preview": "vite preview",
+    "webflow:build": "node scripts/webflow-build-sunlu-gummy.mjs",
+    "webflow:hub": "node scripts/webflow-sunlu-hub-publish.mjs",
+    "webflow:responsive": "node scripts/webflow-apply-responsive.mjs",
+    "webflow:sync": "node scripts/webflow-sync-homepage.mjs",
+    "webflow:token": "node scripts/webflow-token-diagnostic.mjs",
+    "webflow:export": "node scripts/webflow-export-html.mjs",
+    "webflow:host": "node scripts/webflow-host-pages.mjs",
+    "webflow:publish": "node scripts/webflow-publish-kanny.mjs",
+    "webflow:seo": "node scripts/webflow-seo-pages.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.108.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-router-dom": "^7.17.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.2",
+    "oxlint": "^1.69.0",
+    "vite": "^8.1.0"
+  }
+}

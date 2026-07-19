@@ -1,0 +1,37 @@
+{
+  "_meta": {
+    "id": "requirements_daily_sync",
+    "description": "Daily sync SEO/AEO/GEO requirements from official + patent + tracker sources",
+    "activate": true,
+    "snippetRefs": {
+      "Sync Requirements": "req-daily-sync.js"
+    }
+  },
+  "name": "Requirements Daily Sync",
+  "nodes": [
+    {
+      "id": "schedule-req",
+      "name": "Every Day 5 AM IST",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300],
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "30 23 * * *" }]
+        }
+      }
+    },
+    {
+      "id": "code-sync",
+      "name": "Sync Requirements",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300],
+      "parameters": { "mode": "runOnceForAllItems", "jsCode": "" }
+    }
+  ],
+  "connections": {
+    "Every Day 5 AM IST": { "main": [[{ "node": "Sync Requirements", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}

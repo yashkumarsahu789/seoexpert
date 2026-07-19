@@ -1,0 +1,566 @@
+/* Flat class selectors only — WHTML compatible */
+
+.body-copy {
+  margin: 0;
+  overflow-x: hidden;
+  max-width: 100%;
+  width: 100%;
+}
+
+.div-block-3 {
+  width: 100%;
+  max-width: 81.25rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: clamp(0.75rem, 3vw, 1.25rem);
+  padding-right: clamp(0.75rem, 3vw, 1.25rem);
+  box-sizing: border-box;
+}
+
+.w-container {
+  width: 100%;
+  max-width: 58.75rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: clamp(0.75rem, 3vw, 1.25rem);
+  padding-right: clamp(0.75rem, 3vw, 1.25rem);
+  box-sizing: border-box;
+}
+
+.w-layout-blockcontainer {
+  width: 100%;
+  max-width: 58.75rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: clamp(0.75rem, 3vw, 1.25rem);
+  padding-right: clamp(0.75rem, 3vw, 1.25rem);
+  box-sizing: border-box;
+}
+
+.container-16 {
+  width: 100%;
+  max-width: 71.25rem;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+}
+
+.container-18 {
+  width: 100%;
+  max-width: 71.25rem;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+}
+
+.container-3 {
+  width: 100%;
+  max-width: 71.25rem;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+}
+
+.hero-section {
+  width: 100%;
+  overflow: hidden;
+  padding-bottom: clamp(1rem, 3vw, 2rem);
+}
+
+.columns-2 {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+  box-sizing: border-box;
+  gap: clamp(1rem, 3vw, 1.5rem);
+}
+
+.w-row {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.w-col {
+  flex: 1 1 100%;
+  max-width: 100%;
+  width: 100%;
+  min-width: 0;
+  padding-left: 0;
+  padding-right: 0;
+  box-sizing: border-box;
+}
+
+.w-col-6 {
+  flex: 1 1 100%;
+  max-width: 100%;
+  width: 100%;
+  min-width: 0;
+  padding-left: 0;
+  padding-right: 0;
+  box-sizing: border-box;
+}
+
+.sunlu-hero-coupon-card {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 1rem 0;
+  padding: clamp(0.875rem, 3vw, 1.25rem);
+  border-radius: 0.75rem;
+  background: #f0f7f5;
+  border: 1px solid rgba(70, 170, 146, 0.35);
+}
+
+.sunlu-copy-btn {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.sunlu-hero-copy-btn {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.heading-56 {
+  font-size: clamp(1.25rem, 4.5vw, 2.375rem);
+  line-height: 1.2;
+  margin-top: clamp(1rem, 4vw, 2.5rem);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.heading-57 {
+  font-size: clamp(1.125rem, 3.5vw, 2rem);
+  line-height: 1.25;
+  color: #46aa92;
+  word-wrap: break-word;
+}
+
+.heading-6 {
+  font-size: clamp(1.25rem, 3.5vw, 2rem);
+  line-height: 1.25;
+  color: #46aa92;
+  text-align: center;
+  word-wrap: break-word;
+}
+
+.heading-10 {
+  font-size: clamp(1.25rem, 3.5vw, 2rem);
+  line-height: 1.25;
+  color: #46aa92;
+  text-align: center;
+  word-wrap: break-word;
+}
+
+.heading-13 {
+  font-size: clamp(1.25rem, 3.5vw, 2rem);
+  line-height: 1.25;
+  word-wrap: break-word;
+}
+
+.paragraph-24 {
+  font-size: clamp(0.9375rem, 2.5vw, 1.125rem);
+  line-height: 1.55;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.paragraph-25 {
+  font-size: clamp(0.9375rem, 2.5vw, 1.125rem);
+  line-height: 1.55;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  padding-top: clamp(1rem, 3vw, 1.5rem);
+}
+
+.image-15 {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  margin: 1rem auto;
+}
+
+.image-7 {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+.team-member-image-two {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.button-11 {
+  background-color: #46aa92;
+  border-radius: 1.25rem;
+  font-size: clamp(0.9375rem, 2.5vw, 1.1875rem);
+  display: inline-block;
+  text-align: center;
+  margin: 0.75rem 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  word-wrap: break-word;
+  padding: 0.75rem 1.25rem;
+}
+
+.button-12 {
+  background-color: #46aa92;
+  border-radius: 1.25rem;
+  font-size: clamp(0.9375rem, 2.5vw, 1.1875rem);
+  display: inline-block;
+  text-align: center;
+  margin: 0.75rem 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  word-wrap: break-word;
+  padding: 0.75rem 1.25rem;
+}
+
+.button-13 {
+  background-color: #46aa92;
+  border-radius: 1.25rem;
+  font-size: clamp(0.9375rem, 2.5vw, 1.1875rem);
+  display: inline-block;
+  text-align: center;
+  margin: 0.75rem 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  word-wrap: break-word;
+  padding: 0.75rem 1.25rem;
+}
+
+.link-35 {
+  color: #46aa92;
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
+  word-break: break-word;
+  display: inline-block;
+  max-width: 100%;
+}
+
+.navbar-logo-left {
+  width: 100%;
+  background-color: #46aa92;
+}
+
+.navbar-logo-left-container {
+  width: 100%;
+  max-width: 71.25rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding: clamp(0.75rem, 2vw, 1rem) clamp(0.75rem, 3vw, 1.25rem);
+  background-color: #46aa92;
+  box-sizing: border-box;
+}
+
+.shadow-three {
+  width: 100%;
+  max-width: 71.25rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding: clamp(0.75rem, 2vw, 1rem) clamp(0.75rem, 3vw, 1.25rem);
+  background-color: #46aa92;
+  box-sizing: border-box;
+}
+
+.navbar-wrapper-2 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 71.25rem;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.nav-menu-wrapper-2 {
+  width: 100%;
+  max-width: 100%;
+}
+
+.nav-menu-two {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-link-5 {
+  color: #fff;
+  text-decoration: none;
+  font-family: Lato, sans-serif;
+  font-size: clamp(0.875rem, 2vw, 0.9375rem);
+  word-wrap: break-word;
+}
+
+.nav-link-5-1 {
+  color: #fff;
+  text-decoration: none;
+  font-family: Lato, sans-serif;
+  font-size: clamp(0.875rem, 2vw, 0.9375rem);
+  word-wrap: break-word;
+}
+
+.navbar-brand-2 {
+  max-width: 4.6875rem;
+}
+
+.team-slider {
+  background-color: #f5f7fa;
+  padding: clamp(1.5rem, 4vw, 2.5rem) clamp(0.75rem, 3vw, 1.25rem);
+  overflow: hidden;
+  width: 100%;
+}
+
+.team-slider-wrapper {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.team-slide-wrapper {
+  width: 100%;
+  margin-right: 0;
+  box-sizing: border-box;
+}
+
+.team-block {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.team-block-info {
+  padding-left: clamp(0.75rem, 3vw, 1.5rem);
+  padding-right: clamp(0.75rem, 3vw, 1.5rem);
+}
+
+.team-member-text {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.text-block-12 {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.section-2 {
+  width: 100%;
+  padding: clamp(0.75rem, 3vw, 1.25rem);
+  box-sizing: border-box;
+}
+
+.section-3 {
+  width: 100%;
+  padding: clamp(0.75rem, 3vw, 1.25rem);
+  box-sizing: border-box;
+}
+
+.rich-text-block {
+  width: 100%;
+  max-width: 58.75rem;
+  margin: 0 auto;
+  padding: 0 clamp(0.5rem, 2vw, 1.25rem);
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+.rich-text-block-4 {
+  width: 100%;
+  max-width: 58.75rem;
+  margin: 0 auto;
+  padding: 0 clamp(0.5rem, 2vw, 1.25rem);
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+.footer-dark {
+  width: 100%;
+  overflow: hidden;
+  background-color: #46aa92;
+  padding: 0 clamp(0.75rem, 3vw, 1.25rem);
+  box-sizing: border-box;
+}
+
+.footer-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 56.25rem;
+  margin: 0 auto;
+}
+
+.footer-content {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(1.25rem, 4vw, 2rem);
+  width: 100%;
+  padding: clamp(1.5rem, 4vw, 2.1875rem) clamp(0.75rem, 3vw, 1.25rem) 0;
+  box-sizing: border-box;
+}
+
+.footer-link {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.footer-social-block {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+@media screen and (min-width: 48rem) {
+  .team-slide-wrapper {
+    width: 47%;
+    margin-right: 3%;
+  }
+
+  .footer-content {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .button-11 {
+    width: auto;
+    max-width: 100%;
+  }
+
+  .button-12 {
+    width: auto;
+    max-width: 100%;
+  }
+}
+
+@media screen and (min-width: 64rem) {
+  .w-col-6 {
+    flex: 1 1 calc(50% - 0.75rem);
+    max-width: calc(50% - 0.75rem);
+  }
+
+  .team-slide-wrapper {
+    width: 30%;
+    margin-right: 5%;
+  }
+
+  .footer-content {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media screen and (min-width: 90rem) {
+  .div-block-3 {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+}
+
+@media screen and (max-width: 47.9375rem) {
+  .nav-menu-two {
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    padding-bottom: 0.75rem;
+  }
+
+  .nav-link-5 {
+    display: block;
+    padding: 0.5rem 0;
+    width: 100%;
+  }
+
+  .nav-link-5-1 {
+    display: block;
+    padding: 0.5rem 0;
+    width: 100%;
+  }
+
+  .menu-button-4 {
+    display: block;
+  }
+
+  .button-11 {
+    width: 100%;
+    display: block;
+  }
+
+  .button-12 {
+    width: 100%;
+    display: block;
+  }
+
+  .button-13 {
+    width: 100%;
+    display: block;
+  }
+
+  .footer-content {
+    text-align: center;
+  }
+
+  .footer-block {
+    align-items: center;
+  }
+
+  .team-slide-wrapper {
+    width: 100%;
+    margin-right: 0;
+  }
+
+  .w-row {
+    display: block;
+  }
+
+  .w-col {
+    width: 100%;
+    max-width: 100%;
+    float: none;
+    display: block;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .w-col-6 {
+    width: 100%;
+    max-width: 100%;
+    float: none;
+    display: block;
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+@media screen and (max-width: 20rem) {
+  .heading-56 {
+    font-size: 1.125rem;
+  }
+
+  .heading-57 {
+    font-size: 1rem;
+  }
+
+  .sunlu-hero-coupon-card {
+    padding: 0.75rem;
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "_meta": {
+    "id": "whatsapp_hello_demo",
+    "description": "Webhook — CallMeBot se ek WhatsApp message bhejo (hello demo proxy)",
+    "activate": true,
+    "snippetRefs": {}
+  },
+  "name": "WhatsApp Hello Demo",
+  "nodes": [
+    {
+      "id": "webhook-wa",
+      "name": "WhatsApp Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "parameters": {
+        "path": "whatsapp-hello",
+        "httpMethod": "POST",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "webhookId": "whatsapp-hello"
+    },
+    {
+      "id": "http-callmebot",
+      "name": "Send via CallMeBot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.callmebot.com/whatsapp.php",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "phone",
+              "value": "={{ '+' + String($json.body.phone || $json.phone || '').replace(/\\D/g, '') }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.body.text || $json.text || 'hello' }}"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $json.body.apikey || $json.apikey || $env.CALLMEBOT_APIKEY || '' }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 20000
+        }
+      }
+    }
+  ],
+  "connections": {
+    "WhatsApp Webhook": {
+      "main": [
+        [
+          {
+            "node": "Send via CallMeBot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

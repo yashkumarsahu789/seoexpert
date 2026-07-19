@@ -1,0 +1,387 @@
+{
+  "version": "2.0",
+  "name": "LifeSolveNow SEO Automation — Production Safe",
+  "principles": [
+    "NEVER scrape Google directly — use SerpAPI / ValueSerp / Bright Data only",
+    "NEVER use Indexing API for shop pages — sitemap.xml + Search Console ping only",
+    "SEO boost ONLY on rank DROP, with 7-day cooldown per shop",
+    "Merchant feed once daily, not every 6 hours",
+    "Human alert ONLY via error_alert workflow — pipeline never stops"
+  ],
+  "env_vars_n8n_only": {
+    "SUPABASE_URL": "https://sbdlfyfkpatnxkrmslvq.supabase.co",
+    "SUPABASE_SERVICE_ROLE_KEY": "Dashboard → API → service_role (NEVER in React)",
+    "SERP_API_KEY": "SerpAPI or ValueSerp key",
+    "GSC_SITE_URL": "sc-domain:LifeSolveNow.com or https://shop.LifeSolveNow.com/",
+    "GSC_CLIENT_EMAIL": "Search Console service account",
+    "GSC_PRIVATE_KEY": "Service account JSON key",
+    "TELEGRAM_BOT_TOKEN": "Free alerts — optional",
+    "TELEGRAM_CHAT_ID": "Your chat id"
+  },
+  "workflows": [
+    {
+      "id": "1_shop_registered",
+      "name": "shop.registered",
+      "trigger": {
+        "type": "Supabase Database Webhook",
+        "table": "shops",
+        "event": "INSERT",
+        "note": "Preferred over React webhook — auto fires on every new shop"
+      },
+      "nodes": [
+        {
+          "order": 1,
+          "type": "Webhook",
+          "name": "Receive shop INSERT",
+          "input": "{ record: { id, name, slug, city, area, shop_url, product_types } }"
+        },
+        {
+          "order": 2,
+          "type": "Supabase",
+          "operation": "Get",
+          "table": "location_keyword_clusters",
+          "filter": "city + area match"
+        },
+        {
+          "order": 3,
+          "type": "Code",
+          "file": "n8n/snippets/generate-sitemap-entry.js",
+          "action": "Build sitemap XML rows for this shop"
+        },
+        {
+          "order": 4,
+          "type": "Supabase",
+          "operation": "Insert",
+          "table": "indexing_queue",
+          "rows": "shop_url + product pages, index_method=sitemap_ping"
+        },
+        {
+          "order": 5,
+          "type": "Execute Workflow",
+          "target": "4_indexing",
+          "note": "One-time onboarding ping — NOT Indexing API"
+        },
+        {
+          "order": 6,
+          "type": "Execute Workflow",
+          "target": "5_merchant",
+          "note": "Queue merchant feed for next daily run OR run once if new shop"
+        },
+        {
+          "order": 7,
+          "type": "Supabase",
+          "operation": "Insert",
+          "table": "automation_runs",
+          "status": "completed"
+        }
+      ],
+      "on_error": "6_error_alert"
+    },
+    {
+      "id": "2_rank_check",
+      "name": "rank_check",
+      "trigger": {
+        "type": "Schedule",
+        "cron": "0 */6 * * *"
+      },
+      "nodes": [
+        {
+          "order": 1,
+          "type": "Supabase",
+          "sql": "SELECT s.*, lkc.keywords FROM shops s LEFT JOIN location_keyword_clusters lkc ON lkc.city=s.city AND COALESCE(lkc.area,'')=COALESCE(s.area,'') WHERE s.automation_status='active'"
+        },
+        {
+          "order": 2,
+          "type": "Loop Over Items",
+          "name": "Each shop + keyword"
+        },
+        {
+          "order": 3,
+          "type": "HTTP Request",
+          "name": "SERP API — NOT Google",
+          "url": "https://api.valueserp.com/search OR https://serpapi.com/search",
+          "params": {
+            "q": "{{keyword}} {{area}} {{city}}",
+            "location": "{{city}}, India",
+            "gl": "in",
+            "api_key": "{{$env.SERP_API_KEY}}"
+          }
+        },
+        {
+          "order": 4,
+          "type": "Code",
+          "file": "n8n/snippets/parse-serp-position.js",
+          "action": "Find shop.LifeSolveNow.com position in results"
+        },
+        {
+          "order": 5,
+          "type": "If",
+          "condition": "position > 3 OR position IS NULL"
+        },
+        {
+          "order": 6,
+          "type": "Code",
+          "name": "Detect rank DROP only",
+          "logic": "needs_boost = true ONLY IF new_position > last_rank_position (got worse)"
+        },
+        {
+          "order": 7,
+          "type": "Supabase",
+          "operation": "Insert",
+          "table": "rank_snapshots"
+        },
+        {
+          "order": 8,
+          "type": "Supabase",
+          "operation": "Update",
+          "table": "shops",
+          "set": "last_rank_position, needs_boost (only if rank drop), last_rank_drop_at"
+        },
+        {
+          "order": 9,
+          "type": "Supabase",
+          "sql": "SELECT * FROM shops_eligible_for_boost LIMIT 1",
+          "note": "Respects 7-day cooldown view"
+        },
+        {
+          "order": 10,
+          "type": "If",
+          "condition": "eligible shop exists AND daily boosts < max_daily_boosts"
+        },
+        {
+          "order": 11,
+          "type": "Execute Workflow",
+          "target": "3_seo_boost"
+        }
+      ],
+      "on_error": "6_error_alert"
+    },
+    {
+      "id": "3_seo_boost",
+      "name": "seo_boost",
+      "trigger": {
+        "type": "Called by rank_check",
+        "note": "NOT on cron — only rank drop + cooldown clear"
+      },
+      "nodes": [
+        {
+          "order": 1,
+          "type": "Supabase",
+          "sql": "SELECT * FROM shops_eligible_for_boost ORDER BY seo_priority DESC LIMIT 1"
+        },
+        {
+          "order": 2,
+          "type": "If",
+          "condition": "boost_cooldown_until < now() AND boosts_used < max_daily_boosts"
+        },
+        {
+          "order": 3,
+          "type": "Code",
+          "file": "n8n/snippets/generate-seo-meta.js",
+          "action": "Rule-based meta + JSON-LD — area + product keywords (no AI required)"
+        },
+        {
+          "order": 4,
+          "type": "Supabase",
+          "operation": "Update",
+          "table": "shops",
+          "set": "meta fields, last_boost_at=now(), boost_cooldown_until=now()+7days, needs_boost=false"
+        },
+        {
+          "order": 5,
+          "type": "Supabase",
+          "operation": "Update",
+          "table": "daily_automation_limits",
+          "set": "boosts_used + 1"
+        },
+        {
+          "order": 6,
+          "type": "Execute Workflow",
+          "target": "4_indexing",
+          "note": "Regenerate sitemap + ping GSC — NOT Indexing API"
+        }
+      ],
+      "on_error": "6_error_alert"
+    },
+    {
+      "id": "4_indexing",
+      "name": "indexing",
+      "trigger": {
+        "type": "Schedule",
+        "cron": "0 4 * * *",
+        "note": "Daily once — NOT every 4 hours"
+      },
+      "also_triggered_by": ["shop.registered", "seo_boost"],
+      "nodes": [
+        {
+          "order": 1,
+          "type": "If",
+          "condition": "sitemap_pings_used < max_sitemap_pings_per_day"
+        },
+        {
+          "order": 2,
+          "type": "Supabase",
+          "sql": "SELECT url FROM indexing_queue WHERE index_status IN ('pending','failed') AND (next_retry_at IS NULL OR next_retry_at < now())"
+        },
+        {
+          "order": 3,
+          "type": "Code",
+          "file": "n8n/snippets/build-sitemap-xml.js",
+          "output": "shop.LifeSolveNow.com/sitemap.xml"
+        },
+        {
+          "order": 4,
+          "type": "HTTP Request / FTP",
+          "action": "Upload sitemap.xml to hosting"
+        },
+        {
+          "order": 5,
+          "type": "HTTP Request",
+          "name": "Google Sitemap Ping",
+          "url": "https://www.google.com/ping?sitemap=https://shop.LifeSolveNow.com/sitemap.xml",
+          "note": "Standard safe method — NOT Indexing API"
+        },
+        {
+          "order": 6,
+          "type": "HTTP Request",
+          "name": "Search Console API (optional)",
+          "action": "sitemaps.submit via GSC API if credentials set"
+        },
+        {
+          "order": 7,
+          "type": "Supabase",
+          "operation": "Update",
+          "table": "indexing_queue",
+          "set": "index_status=submitted, index_method=sitemap_ping, last_sitemap_ping_at=now()"
+        },
+        {
+          "order": 8,
+          "type": "Supabase",
+          "operation": "Update",
+          "table": "daily_automation_limits",
+          "set": "sitemap_pings_used + 1"
+        }
+      ],
+      "on_error": "6_error_alert"
+    },
+    {
+      "id": "5_merchant",
+      "name": "merchant",
+      "trigger": {
+        "type": "Schedule",
+        "cron": "0 3 * * *",
+        "note": "Daily once at 3am"
+      },
+      "nodes": [
+        {
+          "order": 1,
+          "type": "Supabase",
+          "sql": "SELECT sp.*, s.name as shop_name, s.city, s.area, s.image_cdn_url FROM shop_products sp JOIN shops s ON s.id=sp.shop_id WHERE sp.is_active=true"
+        },
+        {
+          "order": 2,
+          "type": "Code",
+          "file": "n8n/snippets/build-merchant-xml.js",
+          "output": "shop.LifeSolveNow.com/merchant-feed.xml"
+        },
+        {
+          "order": 3,
+          "type": "HTTP Request / FTP",
+          "action": "Upload merchant-feed.xml"
+        },
+        {
+          "order": 4,
+          "type": "Supabase",
+          "operation": "Upsert",
+          "table": "merchant_feed_items"
+        },
+        {
+          "order": 5,
+          "type": "Supabase",
+          "operation": "Update",
+          "table": "shop_products",
+          "set": "merchant_status=submitted"
+        }
+      ],
+      "on_error": "6_error_alert"
+    },
+    {
+      "id": "6_error_alert",
+      "name": "error_alert",
+      "trigger": {
+        "type": "Error Trigger",
+        "note": "Every workflow Settings → On Error → Call Workflow: error_alert"
+      },
+      "nodes": [
+        {
+          "order": 1,
+          "type": "Supabase",
+          "operation": "Insert",
+          "table": "automation_errors",
+          "fields": "severity=critical, requires_human=true, workflow_name, error_message, payload"
+        },
+        {
+          "order": 2,
+          "type": "Telegram",
+          "message": "🚨 LifeSolveNow SEO Error\nWorkflow: {{workflow}}\nError: {{message}}\nShop: {{shop_id}}"
+        },
+        {
+          "order": 3,
+          "type": "Webhook",
+          "url": "VITE_N8N_ERROR_WEBHOOK_URL backup"
+        }
+      ],
+      "note": "Pipeline continues — error does NOT stop other workflows"
+    },
+    {
+      "id": "website_audit",
+      "name": "Website Audit",
+      "trigger": {
+        "type": "Webhook",
+        "path": "website-audit-ingest",
+        "method": "POST",
+        "note": "React app → submitWebsite() → async full pipeline"
+      },
+      "phases": [
+        {
+          "step": 1,
+          "name": "technical",
+          "nodes": ["Normalize URL", "Init Audit Run", "Technical Audit", "Parse On-Page"],
+          "outputs": ["html", "robots", "sitemap", "pagespeed", "onpage"]
+        },
+        {
+          "step": 2,
+          "name": "crawl_keywords",
+          "nodes": ["Crawl Sample Pages", "Keyword Pipeline"],
+          "outputs": ["crawl", "keywords", "paa", "autocomplete"]
+        },
+        {
+          "step": 3,
+          "name": "competitors",
+          "nodes": ["Competitor Gap Analysis"],
+          "requires": ["SERP_API_KEY"],
+          "outputs": ["competitor_gaps"]
+        },
+        {
+          "step": 4,
+          "name": "aeo_geo_wos",
+          "nodes": ["AEO GEO Audit", "Calculate WOS", "Generate HTML Report", "Save Audit Results", "Telegram Critical Alert"],
+          "outputs": ["wos_score", "report_html", "audit_findings"]
+        }
+      ],
+      "scoring": {
+        "formula": "WOS = alpha*S_SEO + beta*S_AEO + gamma*S_GEO",
+        "defaults": { "alpha": 0.5, "beta": 0.25, "gamma": 0.25 }
+      },
+      "supabase_tables": ["websites", "audit_runs", "audit_findings"],
+      "snippets_dir": "n8n/snippets/",
+      "on_error": "6_error_alert"
+    }
+  ],
+  "domains": {
+    "shop": "https://shop.LifeSolveNow.com",
+    "cdn": "https://cd.LifeSolveNow.com",
+    "sitemap": "https://shop.LifeSolveNow.com/sitemap.xml",
+    "merchant_feed": "https://shop.LifeSolveNow.com/merchant-feed.xml"
+  }
+}

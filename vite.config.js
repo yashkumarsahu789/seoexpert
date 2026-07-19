@@ -1,16 +1,18 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import tailwindcss from '@tailwindcss/vite';
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+const N8N_TARGET =
+  process.env.VITE_N8N_BASE_URL?.replace(/\/$/, '') || 'https://lifesolvenow.onrender.com'
 
 export default defineConfig({
-  base: process.env.VITE_BASE_PATH || '/seoexpert/',
-  plugins: [react(), tailwindcss()],
+  plugins: [react()],
   server: {
     proxy: {
-      '/api': {
-        target: 'http://localhost:3001',
+      '/api/n8n': {
+        target: N8N_TARGET,
         changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/n8n/, ''),
       },
     },
   },
-});
+})

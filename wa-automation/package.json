@@ -1,0 +1,18 @@
+{
+  "name": "wa-automation",
+  "private": true,
+  "version": "1.0.0",
+  "description": "WhatsApp Web automation — hello demo (no Cloud API)",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "server": "node server.js",
+    "install-chrome": "npx puppeteer browsers install chrome"
+  },
+  "dependencies": {
+    "puppeteer": "24.38.0",
+    "qrcode": "^1.5.4",
+    "qrcode-terminal": "^0.12.0",
+    "whatsapp-web.js": "^1.26.0"
+  }
+}

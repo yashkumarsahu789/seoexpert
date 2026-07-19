@@ -1,0 +1,37 @@
+{
+  "_meta": {
+    "id": "shop_rank_daily",
+    "description": "Daily Google rank check for shop keywords",
+    "activate": true,
+    "snippetRefs": {
+      "Rank Run": "shop-rank-check-run.js"
+    }
+  },
+  "name": "Shop Rank Daily",
+  "nodes": [
+    {
+      "id": "schedule-rank",
+      "name": "Every Day 7 AM IST",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300],
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "30 1 * * *" }]
+        }
+      }
+    },
+    {
+      "id": "code-rank",
+      "name": "Rank Run",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300],
+      "parameters": { "mode": "runOnceForAllItems", "jsCode": "" }
+    }
+  ],
+  "connections": {
+    "Every Day 7 AM IST": { "main": [[{ "node": "Rank Run", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}

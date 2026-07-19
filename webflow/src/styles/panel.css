@@ -1,0 +1,277 @@
+/* Webflow builder panel */
+.feature-page {
+  padding: 0 0.75rem 2rem;
+  flex: 1;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.feature-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.75rem 0;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.feature-breadcrumb a {
+  color: #4353ff;
+  text-decoration: none;
+}
+
+.ai-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ai-panel-header h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.35rem;
+  color: #0f172a;
+}
+
+.ai-panel-header p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.ai-panel-meta {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.ai-panel-meta span {
+  background: #f1f5f9;
+  color: #475569;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+}
+
+.ai-card-muted {
+  background: #f8fafc;
+}
+
+.ai-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.ai-btn-primary {
+  background: #4353ff;
+  color: #fff;
+  border: none;
+  padding: 0.55rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ai-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ai-btn-secondary {
+  background: #fff;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  padding: 0.55rem 0.85rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+
+.ai-btn-secondary:disabled {
+  opacity: 0.5;
+}
+
+.ai-btn-sm {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.78rem;
+}
+
+.ai-alert {
+  margin: 0.65rem 0 0;
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.ai-alert-error {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.ai-raw-out {
+  margin: 0;
+  font-size: 0.8rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.ai-more {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.ai-more summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 0.5rem;
+}
+
+.ai-input-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  font-family: inherit;
+  font-size: 0.85rem;
+  resize: vertical;
+}
+
+.ai-limits-list {
+  margin: 0 0 0.75rem;
+  padding-left: 1.1rem;
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.ai-limits-list li {
+  margin-bottom: 0.35rem;
+}
+
+.aic-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 4%);
+}
+
+.aic-card h3 {
+  margin: 0 0 0.65rem;
+  font-size: 0.95rem;
+  color: #334155;
+}
+
+.aic-card-hero {
+  background: linear-gradient(180deg, #eef2ff 0%, #fff 40%);
+  border-color: #c7d2fe;
+}
+
+.aic-muted {
+  color: #64748b;
+  font-size: 0.8rem;
+  margin: 0.35rem 0 0;
+}
+
+.aic-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  color: #475569;
+  cursor: pointer;
+  margin: 0.5rem 0;
+}
+
+.badge {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.badge-ok {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.badge-warn {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.wf-demo-link {
+  color: #4353ff !important;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.wf-demo-link:hover {
+  text-decoration: underline;
+}
+
+.wf-panel .wf-steps {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 14px;
+}
+
+.wf-panel .wf-requirement {
+  min-height: 140px;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.wf-panel .wf-examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.wf-panel .wf-build-btn {
+  font-size: 16px;
+  padding: 14px 24px;
+}
+
+.wf-panel .wf-live-url {
+  font-size: 20px;
+  margin: 12px 0;
+}
+
+.wf-panel .wf-live-url a {
+  color: #4353ff;
+  font-weight: 600;
+}
+
+.wf-panel .wf-history {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 14px;
+}
+
+.wf-panel .wf-history li {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px;
+  background: #f8fafc;
+}
+
+.wf-panel .wf-history .badge {
+  margin-left: 8px;
+}
+
+.wf-panel .wf-history a {
+  margin-left: 10px;
+  color: #4353ff;
+}

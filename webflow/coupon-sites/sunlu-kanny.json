@@ -1,0 +1,22 @@
+{
+  "slug": "sunlu-kanny-promo",
+  "brand": "Sunlu",
+  "site_name": "Sunlu Promo Codes",
+  "promo_code": "KANNY",
+  "discount": "10% OFF",
+  "shop_url": "https://shop.LifeSolveNow.com",
+  "reference_url": "https://gummysearchpromocodes.webflow.io/",
+  "webflow": {
+    "live_url": "https://demosite-57cbb8.webflow.io",
+    "site_id": "6a3c3b9da2a3e297d10a1f21",
+    "subdomain": "demosite-57cbb8",
+    "collection_id": "6a3c3ce00137a297969842c0",
+    "cms_slug": "sunlu-kanny-promo"
+  },
+  "hosted": {
+    "html": "sunlu-kanny-promo.html",
+    "embed_html": "webflow-home-embed.html",
+    "public_url": "https://shop.LifeSolveNow.com/coupon-sites/sunlu-kanny-promo.html"
+  },
+  "free_plan_note": "Webflow Starter me Embed nahi — full page yahan host karo, Webflow Home par sirf native Heading + Button se link do."
+}

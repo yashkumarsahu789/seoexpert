@@ -1,0 +1,48 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-shell--demo {
+  background: transparent;
+}
+
+.app-header {
+  padding: 1rem 1.25rem 0;
+  max-width: 720px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.app-header a {
+  color: #4353ff;
+  text-decoration: none;
+}
+
+.app-shell--demo .app-header {
+  display: none;
+}

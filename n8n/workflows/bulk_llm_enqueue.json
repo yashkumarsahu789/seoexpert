@@ -1,0 +1,51 @@
+{
+  "_meta": {
+    "id": "bulk_llm_enqueue",
+    "description": "Scrape/fetch → INSERT bulk_tasks → Supabase Edge + Cloudflare Workers AI",
+    "activate": true,
+    "snippetRefs": {
+      "Enqueue Bulk Task": "bulk-llm-enqueue.js"
+    }
+  },
+  "name": "Bulk LLM Enqueue",
+  "nodes": [
+    {
+      "id": "webhook-bulk-llm",
+      "name": "Bulk LLM Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "bulk-llm-enqueue",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "bulk-llm-enqueue",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "code-bulk-llm",
+      "name": "Enqueue Bulk Task",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300],
+      "parameters": { "mode": "runOnceForAllItems", "jsCode": "" }
+    },
+    {
+      "id": "respond-bulk-llm",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [720, 300],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      }
+    }
+  ],
+  "connections": {
+    "Bulk LLM Webhook": { "main": [[{ "node": "Enqueue Bulk Task", "type": "main", "index": 0 }]] },
+    "Enqueue Bulk Task": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}
