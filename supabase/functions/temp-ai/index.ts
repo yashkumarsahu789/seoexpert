@@ -20,7 +20,20 @@ const ALLOWED_MODELS = new Set([
   'gemini-3.5-flash',
 ])
 
-const DEFAULT_MODEL = 'gemini-flash-latest'
+/** Task → preferred models (client loop picks free slot; edge validates / fallback) */
+const TASK_MODEL_MAP: Record<string, string[]> = {
+  classify: ['gemini-2.0-flash-lite', 'gemini-flash-lite-latest', 'gemini-2.0-flash'],
+  seo_meta: ['gemini-2.0-flash-lite', 'gemini-flash-latest', 'gemini-2.0-flash'],
+  keyword: ['gemini-flash-latest', 'gemini-2.0-flash-lite', 'gemini-2.0-flash'],
+  multilingual: ['gemini-2.0-flash', 'gemini-flash-latest', 'gemini-2.5-flash'],
+  summary: ['gemini-2.0-flash', 'gemini-flash-latest', 'gemini-2.5-flash'],
+  audit: ['gemini-2.0-flash', 'gemini-2.5-flash', 'gemini-flash-latest'],
+  competitor: ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-2.5-pro'],
+  action_plan: ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-2.5-pro'],
+  deep_reason: ['gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-2.0-flash'],
+  general: ['gemini-flash-latest', 'gemini-2.0-flash', 'gemini-2.0-flash-lite'],
+}
+
 const MAX_OUTPUT_TOKENS = 2048
 
 function cleanEnv(name: string): string {
@@ -36,9 +49,17 @@ function collectLockedKeys(): { name: string; key: string }[] {
   return out
 }
 
-function resolveModel(raw?: string | null): string {
-  const id = (raw || DEFAULT_MODEL).trim()
-  return ALLOWED_MODELS.has(id) ? id : DEFAULT_MODEL
+function resolveModel(modelKey?: string | null, taskType?: string | null): string {
+  const raw = (modelKey || '').trim()
+  if (raw && ALLOWED_MODELS.has(raw)) return raw
+
+  const type = String(taskType || 'general').trim()
+  const candidates = TASK_MODEL_MAP[type] || TASK_MODEL_MAP.general
+  const picked = candidates.find((id) => ALLOWED_MODELS.has(id))
+  if (!picked) {
+    throw new Error(`taskType "${type}" ke liye koi allowed model nahi mila`)
+  }
+  return picked
 }
 
 function isRetryable(status: number, message: string): boolean {
@@ -140,7 +161,7 @@ Deno.serve(async (req) => {
         count: keys.length,
         hint:
           keys.length === 3
-            ? '3/3 TEMP keys locked — sirf /temp AI use karega'
+            ? '3/3 TEMP keys — model task type se auto assign hota hai'
             : `${keys.length}/3 TEMP keys set — baaki supabase secrets me daalo`,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -162,7 +183,7 @@ Deno.serve(async (req) => {
     })
   }
 
-  const model = resolveModel(body.model as string | undefined)
+  const model = resolveModel(body.model as string | undefined, body.taskType as string | undefined)
 
   try {
     const result = await runWithLockedKeys(prompt, model)

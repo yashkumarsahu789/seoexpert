@@ -9,7 +9,6 @@ const SECRET_NAMES = [
   'TEMP_GOOGLE_API_KEY1',
   'TEMP_GOOGLE_API_KEY2',
   'TEMP_GOOGLE_API_KEY3',
-  'GEMINI_MODEL',
 ]
 
 const env = loadTempEnv()

@@ -12,7 +12,7 @@ export const TEMP_KEY_SLOT_NAMES = [
   'TEMP_GOOGLE_API_KEY3',
 ]
 
-/** Task kinds → preferred model ids (first free / under-limit wins) */
+/** Task kinds → preferred model ids — kaam aate hi auto pick (busy/limit pe wait) */
 export const TEMP_TASK_MODEL_MAP = {
   classify: ['gemini-2.0-flash-lite', 'gemini-flash-lite-latest', 'gemini-2.0-flash'],
   seo_meta: ['gemini-2.0-flash-lite', 'gemini-flash-latest', 'gemini-2.0-flash'],
