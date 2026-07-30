@@ -10,6 +10,7 @@ const DEFAULT_PERSONAL_PREFIXES = [
   '/ai-automation',
   '/ai-center',
   '/whatsapp',
+  '/temp',
 ]
 
 function isPersonalFeaturePath(pathname, personalPaths) {
@@ -31,9 +32,17 @@ export default function AppLayout({ personalPaths }) {
         <Link to="/" className="home-header-link">
           <h1>LifeSolveNow SEO Engine</h1>
         </Link>
-        {onPersonalFeature && !isHome && pathname !== '/personal' && (
+        {onPersonalFeature &&
+          !isHome &&
+          pathname !== '/personal' &&
+          !pathname.startsWith('/temp') && (
           <Link to="/personal" className="home-back-home">
             ← All Features
+          </Link>
+        )}
+        {pathname.startsWith('/temp') && pathname !== '/temp' && (
+          <Link to="/temp" className="home-back-home">
+            ← Temp AI
           </Link>
         )}
         {!isHome && !onPersonalFeature && pathname.startsWith('/folders') && (

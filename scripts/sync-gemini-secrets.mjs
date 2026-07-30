@@ -25,9 +25,7 @@ function loadEnv() {
 const SECRET_NAMES = [
   'GEMINI_API_KEY',
   'GEMINI_MODEL',
-  'Google_API_KEY1',
-  'Google_API_KEY2',
-  'Google_API_KEY3',
+  // Google_API_KEY1–3 LOCKED to /temp as TEMP_GOOGLE_API_KEY* — sync-temp-ai-secrets.mjs
   'GEMINI_API_KEY4',
   'GEMINI_API_KEY5',
   'GEMINI_API_KEY6',

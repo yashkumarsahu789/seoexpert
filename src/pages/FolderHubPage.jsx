@@ -43,7 +43,13 @@ export default function FolderHubPage() {
 
   return (
     <div className="feature-hub">
-      <p className="feature-hub-intro">Apna folder banao — andar workflows + API keys manage karo</p>
+      <p className="feature-hub-intro">Folders ke andar workflows banao, API keys add karo, aur automation chalao</p>
+
+      <div className="home-quick-links">
+        <Link to="/temp" className="home-quick-link home-quick-link-temp">
+          Temp AI (locked keys) →
+        </Link>
+      </div>
 
       <form className="folder-create-form" onSubmit={handleCreate}>
         <input

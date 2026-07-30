@@ -7,6 +7,8 @@ import FeatureHubPage from './pages/FeatureHubPage'
 import FolderHubPage from './pages/FolderHubPage'
 import FolderDetailPage from './pages/FolderDetailPage'
 import WorkflowBuilderPage from './pages/WorkflowBuilderPage'
+import TempHubPage from './pages/TempHubPage'
+import TempModelsPage from './pages/TempModelsPage'
 import AutomationsPage from './pages/AutomationsPage'
 import AiAutomationPage from './pages/AiAutomationPage'
 import AiCenterPage from './pages/AiCenterPage'
@@ -31,6 +33,7 @@ const PERSONAL_FEATURE_PATHS = new Set([
   '/ai-automation',
   '/ai-center',
   '/whatsapp',
+  '/temp',
 ])
 
 const routerBasename = import.meta.env.BASE_URL.replace(/\/$/, '')
@@ -43,6 +46,8 @@ export default function App() {
           <Route element={<AppLayout personalPaths={PERSONAL_FEATURE_PATHS} />}>
             <Route index element={<FolderHubPage />} />
             <Route path="personal" element={<FeatureHubPage />} />
+            <Route path="temp" element={<TempHubPage />} />
+            <Route path="temp/models" element={<TempModelsPage />} />
             <Route path="folders/:folderId" element={<FolderDetailPage />} />
             <Route path="folders/:folderId/workflows/:workflowId" element={<WorkflowBuilderPage />} />
             <Route path="audit" element={<AuditLayout />}>

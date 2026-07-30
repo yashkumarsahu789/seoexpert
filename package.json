@@ -18,6 +18,8 @@
     "keyword-pages:check": "node scripts/check-keyword-pages-setup.mjs",
     "gemini:test": "node scripts/test-gemini-keys.mjs",
     "gemini:sync": "node scripts/sync-gemini-secrets.mjs",
+    "temp:setup": "node scripts/temp-setup.mjs",
+    "temp:sync": "node scripts/sync-temp-ai-secrets.mjs",
     "serp:test": "node scripts/test-serp.mjs",
     "webflow:dev": "npm run dev --prefix webflow",
     "webflow:check": "npm run webflow:check --prefix webflow",

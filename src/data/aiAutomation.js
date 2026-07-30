@@ -57,8 +57,14 @@ export const GEMINI_MODELS = [
 export const GEMINI_ENV_KEYS = [
   { key: 'GEMINI_API_KEY', note: 'Primary key — Edge Function pehle isse try karta hai' },
   { key: 'GEMINI_MODEL', note: 'Default model id (gemini-2.0-flash)' },
-  { key: 'Google_API_KEY1–3', note: 'Rotation pool' },
-  { key: 'GEMINI_API_KEY4–9', note: 'Rotation pool (AIza + AQ tokens)' },
+  {
+    key: 'GEMINI_API_KEY4–9',
+    note: 'Bulk/audit rotation (KEY1–3 locked to /temp as TEMP_GOOGLE_*)',
+  },
+  {
+    key: 'TEMP_GOOGLE_API_KEY1–3',
+    note: 'LOCKED — sirf /temp Edge Function temp-ai',
+  },
 ]
 
 export const APP_PIPELINE_LIMITS = {
@@ -236,7 +242,7 @@ export const SUPABASE_SECRETS = [
   {
     key: 'GEMINI_API_KEY4–9',
     required: false,
-    note: 'Optional rotation pool — supabase secrets set individually',
+    note: 'Optional rotation pool — KEY1–3 are TEMP_* locked to /temp',
     example: 'AQ.… or AIza…',
   },
 ]

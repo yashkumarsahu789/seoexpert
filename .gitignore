@@ -13,6 +13,9 @@ dist-ssr
 *.local
 .env
 
+# /temp standalone secrets (share file directly — not on GitHub)
+temp/.env
+
 # Local / generated
 .cursor/
 .firebase/

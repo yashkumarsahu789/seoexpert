@@ -40,11 +40,19 @@ function collectKeys(env) {
 
   if (env.GEMINI_API_KEY) add('GEMINI_API_KEY', env.GEMINI_API_KEY)
 
+  // Bulk/audit pool only — skip Google_API_KEY* (legacy) and TEMP_* (tested separately)
   const numbered = Object.entries(env)
-    .filter(([name, value]) => /^(Google_API_KEY|GEMINI_API_KEY)\d+$/i.test(name) && value?.trim())
+    .filter(([name, value]) => /^GEMINI_API_KEY\d+$/i.test(name) && value?.trim())
     .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))
 
   for (const [name, value] of numbered) add(name, value)
+
+  const temp = Object.entries(env)
+    .filter(([name, value]) => /^TEMP_GOOGLE_API_KEY\d+$/i.test(name) && value?.trim())
+    .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))
+
+  for (const [name, value] of temp) add(name, value)
+
   return keys
 }
 

@@ -46,8 +46,14 @@ function collectGeminiKeys(): string[] {
   if (primary) keys.push(primary)
 
   const env = Deno.env.toObject()
+  // Only GEMINI_API_KEY4+ — Google_API_KEY1–3 are LOCKED to /temp (TEMP_GOOGLE_API_KEY*)
   const numbered = Object.entries(env)
-    .filter(([name, value]) => /^(GEMINI_API_KEY|Google_API_KEY)\d+$/i.test(name) && value?.trim())
+    .filter(([name, value]) => {
+      if (!value?.trim()) return false
+      if (/^TEMP_GOOGLE_API_KEY\d+$/i.test(name)) return false
+      if (/^Google_API_KEY\d+$/i.test(name)) return false
+      return /^GEMINI_API_KEY\d+$/i.test(name)
+    })
     .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))
 
   for (const [, value] of numbered) {
