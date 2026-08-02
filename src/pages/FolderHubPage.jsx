@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { createFolder, listFolders } from '../services/folderService'
 
 export default function FolderHubPage() {
+  const navigate = useNavigate()
   const [folders, setFolders] = useState([])
   const [name, setName] = useState('')
   const [loading, setLoading] = useState(true)
@@ -11,7 +12,6 @@ export default function FolderHubPage() {
 
   async function load() {
     setLoading(true)
-    setError('')
     try {
       setFolders(await listFolders())
     } catch (err) {
@@ -27,15 +27,19 @@ export default function FolderHubPage() {
 
   async function handleCreate(e) {
     e.preventDefault()
-    if (!name.trim()) return
+    const trimmed = name.trim()
+    if (!trimmed) {
+      setError('Pehle folder ka naam likho')
+      return
+    }
     setCreating(true)
     setError('')
     try {
-      await createFolder(name)
+      const folder = await createFolder(trimmed)
       setName('')
-      await load()
+      navigate(`/folders/${folder.id}`)
     } catch (err) {
-      setError(err.message)
+      setError(err.message || 'Folder create nahi ho paya')
     } finally {
       setCreating(false)
     }
@@ -48,12 +52,18 @@ export default function FolderHubPage() {
       <form className="folder-create-form" onSubmit={handleCreate}>
         <input
           type="text"
+          name="folderName"
           placeholder="Folder name (e.g. Client ABC)"
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(e) => {
+            setName(e.target.value)
+            if (error) setError('')
+          }}
           disabled={creating}
+          autoComplete="off"
+          autoFocus
         />
-        <button type="submit" disabled={creating || !name.trim()}>
+        <button type="submit" disabled={creating}>
           {creating ? 'Creating…' : '+ New Folder'}
         </button>
       </form>
