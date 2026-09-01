@@ -31,6 +31,6 @@ export function automationConfig(env = loadAutomationEnv()) {
     appPublicBase: (env.VITE_TOOLS_PUBLIC_URL || 'https://shop.LifeSolveNow.com').replace(/\/$/, ''),
     skipKeywords: (env.KEYWORD_PAGES_SKIP || 'chatgpt,openai chatgpt').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean),
     serpApiKey: env.SERP_API_KEY || '',
-    serperApiKey: env.SERPER_API_KEY || '',
+    serperApiKey: env.SERPER_API_KEY || env.SERPer_API_KEY || '',
   }
 }

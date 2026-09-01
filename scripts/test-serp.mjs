@@ -24,7 +24,7 @@ function loadEnv() {
 }
 
 const env = loadEnv()
-const serperKey = env.SERPER_API_KEY || process.env.SERPER_API_KEY || ''
+const serperKey = env.SERPER_API_KEY || env.SERPer_API_KEY || process.env.SERPER_API_KEY || process.env.SERPer_API_KEY || ''
 const serpApiKey = env.SERP_API_KEY || process.env.SERP_API_KEY || ''
 
 console.log(`Query: "${query}"\n`)
