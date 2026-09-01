@@ -140,9 +140,23 @@ async function main() {
   if (topUrl) console.log(`→ SERP top: ${topUrl}`)
 
   const useAi = cfg.useAi && !args.noAi
-  const { config, intelligence } = useAi
-    ? await runPageIntelligenceNode(keyword, topUrl, env)
-    : await runTemplatePageNode(keyword, topUrl)
+  let pageData = null
+  let usedAi = false
+
+  if (useAi) {
+    try {
+      pageData = await runPageIntelligenceNode(keyword, topUrl, env)
+      usedAi = true
+    } catch (err) {
+      console.warn(`[daily-keyword-page] AI generation failed (${err.message}) — falling back to template mode`)
+    }
+  }
+
+  if (!pageData) {
+    pageData = await runTemplatePageNode(keyword, topUrl)
+  }
+
+  const { config, intelligence } = pageData
 
   const row = configToRow(config)
 
@@ -156,7 +170,7 @@ async function main() {
           slug: config.slug,
           pageType: config.pageType,
           theme: config.theme?.id,
-          usedAi: useAi,
+          usedAi: usedAi,
           serpTopUrl: topUrl,
           purpose: intelligence?.brief?.purpose || null,
         },

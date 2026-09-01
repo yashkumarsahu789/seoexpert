@@ -40,7 +40,7 @@ const FALLBACK_CHAIN = [
 
 export function loadLlmEnv(env = process.env) {
   return {
-    gemini: (env.GEMINI_API_KEY || env.GEMINI_API_KEY5 || env.GEMINI_API_KEY4 || env.VITE_GEMINI_API_KEY || '').trim(),
+    gemini: (env.GEMINI_API_KEY || env.GEMINI_API_KEY5 || env.GEMINI_API_KEY4 || env.VITE_GEMINI_API_KEY || 'AIzaSyA17o8Gl4P8-xGf5IL9SBOFEEZPN-zMkko').trim(),
     groq: (env.grok || env.GROQ_API_KEY || '').trim(),
     sambanova: (env['sambanova.ai'] || env.SAMBANOVA_API_KEY || '').trim(),
     huggingface: (env.huggingface || env.HUGGINGFACE_TOKEN || '').trim(),

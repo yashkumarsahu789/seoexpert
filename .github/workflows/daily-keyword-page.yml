@@ -84,5 +84,6 @@ jobs:
             echo "No registry changes"
           else
             git commit -m "keyword-pages: daily registry + sitemap [automated]"
-            git push
+            git pull --rebase origin main || true
+            git push origin main
           fi
