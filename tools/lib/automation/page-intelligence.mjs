@@ -7,7 +7,7 @@ import { classifyKeyword } from '../page-generator.mjs'
 import { runLlmChat } from '../llmRunner.mjs'
 import { TOOLS_ROOT } from './env.mjs'
 
-const PREFERRED = ['groq-llama-3.1-8b-instant', 'groq-llama-3.3-70b-versatile', 'sambanova-Meta-Llama-3.1-70B-Instruct']
+const PREFERRED = ['gemini-gemini-3.6-flash', 'gemini-gemini-flash-latest', 'groq-llama-3.3-70b-versatile', 'sambanova-Meta-Llama-3.1-70B-Instruct']
 
 async function loadAutomationModules() {
   const base = path.join(TOOLS_ROOT, 'src')

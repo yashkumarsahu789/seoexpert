@@ -8,17 +8,19 @@ export const TOOLS_ROOT = path.resolve(__dirname, '../..')
 export const REPO_ROOT = path.resolve(TOOLS_ROOT, '..')
 
 export function loadAutomationEnv() {
-  const envPath = path.join(TOOLS_ROOT, '.env')
   const out = { ...process.env }
-  if (!existsSync(envPath)) return out
-  for (const line of readFileSync(envPath, 'utf8').replace(/^\uFEFF/, '').split(/\r?\n/)) {
-    const t = line.trim()
-    if (!t || t.startsWith('#')) continue
-    const eq = t.indexOf('=')
-    if (eq === -1) continue
-    const key = t.slice(0, eq).trim()
-    const val = t.slice(eq + 1).trim()
-    if (!out[key]) out[key] = val
+  const envPaths = [path.join(TOOLS_ROOT, '.env'), path.join(REPO_ROOT, '.env')]
+  for (const envPath of envPaths) {
+    if (!existsSync(envPath)) continue
+    for (const line of readFileSync(envPath, 'utf8').replace(/^\uFEFF/, '').split(/\r?\n/)) {
+      const t = line.trim()
+      if (!t || t.startsWith('#')) continue
+      const eq = t.indexOf('=')
+      if (eq === -1) continue
+      const key = t.slice(0, eq).trim()
+      const val = t.slice(eq + 1).trim()
+      if (!out[key]) out[key] = val
+    }
   }
   return out
 }

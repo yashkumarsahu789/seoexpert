@@ -3,9 +3,16 @@
  * DeepSeek intentionally skipped (user preference). Keys from .env (never VITE_).
  */
 
+const GEMINI_MODELS = new Set([
+  'gemini-3.6-flash',
+  'gemini-3.5-flash',
+  'gemini-flash-latest',
+])
+
 const GROQ_MODELS = new Set([
   'llama-3.3-70b-versatile',
-  'llama-3.1-8b-instant',
+  'llama3-8b-8192',
+  'llama3-70b-8192',
   'mixtral-8x7b-32768',
 ])
 
@@ -21,8 +28,10 @@ const CF_MODEL_MAP = {
 }
 
 const FALLBACK_CHAIN = [
-  'groq-llama-3.1-8b-instant',
+  'gemini-gemini-3.6-flash',
+  'gemini-gemini-flash-latest',
   'groq-llama-3.3-70b-versatile',
+  'groq-llama3-8b-8192',
   'sambanova-Meta-Llama-3.1-70B-Instruct',
   'hf-mistralai/Mistral-7B-Instruct-v0.3',
   'cf-llama',
@@ -31,6 +40,7 @@ const FALLBACK_CHAIN = [
 
 export function loadLlmEnv(env = process.env) {
   return {
+    gemini: (env.GEMINI_API_KEY || env.GEMINI_API_KEY5 || env.GEMINI_API_KEY4 || env.VITE_GEMINI_API_KEY || '').trim(),
     groq: (env.grok || env.GROQ_API_KEY || '').trim(),
     sambanova: (env['sambanova.ai'] || env.SAMBANOVA_API_KEY || '').trim(),
     huggingface: (env.huggingface || env.HUGGINGFACE_TOKEN || '').trim(),
@@ -43,6 +53,13 @@ export function loadLlmEnv(env = process.env) {
 
 function agentToRoute(agentId, creds) {
   if (!agentId || agentId === 'github' || agentId.includes('deepseek')) return null
+
+  if (agentId.startsWith('gemini-')) {
+    if (!creds.gemini) return null
+    const model = agentId.replace('gemini-', '')
+    if (!GEMINI_MODELS.has(model)) return null
+    return { provider: 'gemini', model, agentId }
+  }
 
   if (agentId.startsWith('cf-')) {
     if (!creds.cloudflare.accountId || !creds.cloudflare.token) return null
@@ -90,6 +107,23 @@ export function pickLlmRoute(preferredAgentId, creds, preferredList = []) {
     if (route) return route
   }
   return null
+}
+
+async function callGemini(apiKey, model, prompt, maxTokens) {
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { maxOutputTokens: maxTokens, temperature: 0.25 },
+      }),
+    }
+  )
+  const data = await res.json()
+  if (!res.ok) throw new Error(data?.error?.message || `Gemini HTTP ${res.status}`)
+  return data?.candidates?.[0]?.content?.parts?.[0]?.text || ''
 }
 
 async function callGroq(apiKey, model, prompt, maxTokens) {
@@ -184,27 +218,48 @@ export async function runLlmChat({
   env = process.env,
 }) {
   const creds = loadLlmEnv(env)
-  const route = pickLlmRoute(agentId, creds, preferredAgents)
-  if (!route) {
-    throw new Error('Koi LLM provider configured nahi — Groq/SambaNova/HF ya Cloudflare keys .env me daalo')
+  const tryIds = [
+    agentId,
+    ...(preferredAgents || []),
+    ...FALLBACK_CHAIN,
+  ].filter(Boolean)
+
+  const seen = new Set()
+  let lastError = null
+
+  for (const id of tryIds) {
+    if (seen.has(id)) continue
+    seen.add(id)
+    const route = agentToRoute(id, creds)
+    if (!route) continue
+
+    try {
+      let text = ''
+      if (route.provider === 'gemini') {
+        text = await callGemini(creds.gemini, route.model, prompt, maxTokens)
+      } else if (route.provider === 'groq') {
+        text = await callGroq(creds.groq, route.model, prompt, maxTokens)
+      } else if (route.provider === 'sambanova') {
+        text = await callSambanova(creds.sambanova, route.model, prompt, maxTokens)
+      } else if (route.provider === 'huggingface') {
+        text = await callHuggingface(creds.huggingface, route.model, prompt, maxTokens)
+      } else if (route.provider === 'cloudflare') {
+        text = await callCloudflare(
+          creds.cloudflare.accountId,
+          creds.cloudflare.token,
+          route.model,
+          prompt,
+          maxTokens
+        )
+      }
+      if (text) {
+        return { text: String(text).trim(), agentId: route.agentId, provider: route.provider }
+      }
+    } catch (err) {
+      lastError = err
+      console.warn(`[llmRunner] Route "${id}" failed (${err.message}) — trying fallback...`)
+    }
   }
 
-  let text = ''
-  if (route.provider === 'groq') {
-    text = await callGroq(creds.groq, route.model, prompt, maxTokens)
-  } else if (route.provider === 'sambanova') {
-    text = await callSambanova(creds.sambanova, route.model, prompt, maxTokens)
-  } else if (route.provider === 'huggingface') {
-    text = await callHuggingface(creds.huggingface, route.model, prompt, maxTokens)
-  } else if (route.provider === 'cloudflare') {
-    text = await callCloudflare(
-      creds.cloudflare.accountId,
-      creds.cloudflare.token,
-      route.model,
-      prompt,
-      maxTokens
-    )
-  }
-
-  return { text: String(text || '').trim(), agentId: route.agentId, provider: route.provider }
+  throw new Error(lastError?.message || 'Koi LLM provider configured nahi — Groq/SambaNova/HF ya Cloudflare keys .env me daalo')
 }

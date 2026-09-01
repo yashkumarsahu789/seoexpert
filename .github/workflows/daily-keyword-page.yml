@@ -50,6 +50,9 @@ jobs:
         env:
           grok: ${{ secrets.GROQ_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          SERPER_API_KEY: ${{ secrets.SERPER_API_KEY }}
+          SERPer_API_KEY: ${{ secrets.SERPER_API_KEY }}
           sambanova.ai: ${{ secrets.SAMBANOVA_API_KEY }}
           huggingface: ${{ secrets.HUGGINGFACE_TOKEN }}
           SERP_API_KEY: ${{ secrets.SERP_API_KEY }}
