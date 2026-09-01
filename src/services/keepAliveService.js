@@ -36,9 +36,6 @@ export function getKeepAliveWebhookUrl() {
 async function pingWithResponse(url, source) {
   const res = await fetch(url, {
     method: 'GET',
-    headers: {
-      'x-keepalive-source': source,
-    },
   })
 
   const text = await res.text()
@@ -78,9 +75,18 @@ export async function pingKeepAlive(source = 'react_app') {
     if (err.message === 'Failed to fetch' || err.name === 'TypeError') {
       // Production: browser CORS block — request still reaches n8n to wake Render
       const remoteUrl = `${KEEPALIVE_WEBHOOK.replace(/\/$/, '')}?source=${encodeURIComponent(source)}`
-      return pingNoCors(remoteUrl)
+      try {
+        return await pingNoCors(remoteUrl)
+      } catch {
+        return { status: 0, data: null, pingedAt: new Date(), error: 'CORS ping failed' }
+      }
     }
-    throw err
+    return {
+      status: err.status || 500,
+      data: null,
+      pingedAt: new Date(),
+      error: err.message,
+    }
   }
 }
 

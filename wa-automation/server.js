@@ -38,7 +38,9 @@ function pushLog(line, kind = 'info') {
 }
 
 function ensureClient() {
-  if (client) return Promise.resolve(client)
+  // Client object early set hota hai — ready se pehle return mat karo
+  // (warna sendMessage → getChat undefined)
+  if (client && state.connected) return Promise.resolve(client)
   if (initPromise) return initPromise
 
   initPromise = new Promise((resolve, reject) => {
@@ -58,11 +60,14 @@ function ensureClient() {
         },
         onAuthFailure: (msg) => {
           state.error = String(msg)
+          initPromise = null
           pushLog(`Auth fail: ${msg}`, 'err')
           reject(new Error(msg))
         },
         onDisconnected: (reason) => {
           state.connected = false
+          // next ensureClient re-init wait kare
+          initPromise = null
           pushLog(`Disconnected: ${reason}`, 'warn')
         },
         onInitError: (err) => {

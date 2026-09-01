@@ -95,35 +95,46 @@ function mapRsShopToSeo(row) {
   const slug = String(row.slug || '').trim()
   if (!slug || SYSTEM_SLUGS.has(slug.toLowerCase())) return null
 
-  const { city, area } = parseCityArea(row.address, slug)
+  const addressOrArea = row.address || [row.area, row.city].filter(Boolean).join(', ')
+  const { city, area } = parseCityArea(addressOrArea, slug)
+  const resolvedCity = row.city || city || 'India'
+  const resolvedArea = row.area ?? area ?? null
+
   const types = row.category
     ? Array.isArray(row.category)
       ? row.category
       : [String(row.category)]
+    : Array.isArray(row.product_types) && row.product_types.length
+    ? row.product_types
     : ['general']
+
   const name = cleanShopDisplayName(row.name, slug)
+
+  const primaryKeywords = Array.isArray(row.primary_keywords) && row.primary_keywords.length
+    ? row.primary_keywords
+    : [
+        `${name} ${resolvedCity}`,
+        `${types[0]} shop ${resolvedArea || resolvedCity}`,
+        `best ${types[0]} ${resolvedCity}`,
+      ].filter(isUsefulKeyword)
 
   return {
     source_shop_id: row.id,
     name,
     slug,
-    city,
-    area,
-    shop_url: `${SHOP_BASE}/${slug}`,
+    city: resolvedCity,
+    area: resolvedArea,
+    shop_url: row.shop_url || `${SHOP_BASE}/${slug}`,
     sitemap_entry_url: `${SITEMAP_URL}`,
     image_cdn_url: `${CDN_BASE}/${slug}`,
     product_types: types,
-    primary_keywords: [
-      `${name} ${city}`,
-      `${types[0]} shop ${area || city}`,
-      `best ${types[0]} ${city}`,
-    ].filter(isUsefulKeyword),
+    primary_keywords: primaryKeywords,
     source: 'rs_shops',
     automation_status: 'active',
     last_synced_at: new Date().toISOString(),
     seo_synced: true,
-    latitude: row.lat ?? null,
-    longitude: row.lng ?? null,
+    latitude: row.latitude ?? row.lat ?? null,
+    longitude: row.longitude ?? row.lng ?? null,
   }
 }
 
@@ -154,7 +165,7 @@ const SYSTEM_SLUGS = new Set([
 async function fetchShopsFromRsShops() {
   const { data, error } = await supabase
     .from('rs_shops')
-    .select('id, name, slug, phone, category, address, lat, lng, plan, plan_expires_at')
+    .select('id, name, slug, city, area, shop_url, product_types, primary_keywords, latitude, longitude')
     .not('slug', 'is', null)
     .order('name')
 
@@ -162,7 +173,8 @@ async function fetchShopsFromRsShops() {
     if (error.code === '42P01' || error.message?.includes('rs_shops')) {
       return null
     }
-    throw error
+    console.warn('[shopSyncService] rs_shops query returned error:', error.message)
+    return null
   }
 
   return (data || []).map(mapRsShopToSeo).filter(Boolean)

@@ -66,16 +66,65 @@ function createWaClient(handlers = {}) {
   return client
 }
 
+async function resolveChatId(client, phone) {
+  const digits = normalizePhone(phone)
+  if (!digits) throw new Error('Invalid phone number')
+
+  // Prefer WhatsApp-registered id (handles number format / LID)
+  try {
+    const wid = await client.getNumberId(digits)
+    if (wid?._serialized) return wid._serialized
+  } catch (err) {
+    console.warn('getNumberId failed, fallback chatId:', err.message)
+  }
+
+  return toChatId(digits)
+}
+
+async function waitForStore(client, timeoutMs = 45_000) {
+  const page = client.pupPage
+  if (!page) {
+    // Ready event ke baad thoda wait — Store inject ho
+    await sleep(2500)
+    return
+  }
+
+  const started = Date.now()
+  while (Date.now() - started < timeoutMs) {
+    try {
+      const ready = await page.evaluate(() => {
+        // eslint-disable-next-line no-undef
+        const store = window.Store
+        return Boolean(store && store.Chat && typeof store.Chat.get === 'function')
+      })
+      if (ready) return
+    } catch {
+      /* page not ready yet */
+    }
+    await sleep(500)
+  }
+
+  // Last try — sendMessage still often works after short settle
+  await sleep(1500)
+}
+
 async function runHelloLoop(client, phone, options = {}) {
   const count = options.count ?? HELLO_COUNT
   const intervalMs = options.intervalMs ?? HELLO_INTERVAL_MS
   const onProgress = options.onProgress || (() => {})
   const shouldStop = options.shouldStop || (() => false)
 
-  const chatId = toChatId(phone)
   if (!normalizePhone(phone)) {
     throw new Error('Invalid phone number')
   }
+
+  if (!client?.info) {
+    throw new Error('WhatsApp client ready nahi hai — QR scan / wait karo')
+  }
+
+  await waitForStore(client)
+  const chatId = await resolveChatId(client, phone)
+  console.log(`Resolved chat: ${chatId}`)
 
   for (let i = 1; i <= count; i += 1) {
     if (shouldStop()) break
