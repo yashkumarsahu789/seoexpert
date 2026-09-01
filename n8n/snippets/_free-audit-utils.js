@@ -4,6 +4,9 @@ const FREE_AUDIT_UA =
 
 function freeEnv(name) {
   try {
+    if (name === 'SERPER_API_KEY') {
+      return $env.SERPER_API_KEY || $env.SERPer_API_KEY || '';
+    }
     return $env[name] || '';
   } catch {
     return '';

@@ -123,6 +123,76 @@ export async function serpTopUrl(keyword, { serpApiKey = '', serperApiKey = '' }
   return organic[0]?.link || organic[0]?.url || ''
 }
 
+export async function checkKeywordRankPosition(keyword, targetDomain, { serpApiKey = '', serperApiKey = '' } = {}) {
+  const q = String(keyword || '').trim()
+  const domain = String(targetDomain || '').toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0]
+  if (!q || !domain) return { rankPosition: null, rankUrl: null, source: 'invalid_input' }
+
+  if (serperApiKey) {
+    try {
+      const res = await fetch('https://google.serper.dev/search', {
+        method: 'POST',
+        headers: {
+          'X-API-KEY': serperApiKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ q, gl: 'in', hl: 'en', num: 20 }),
+      })
+      const data = await res.json()
+      const organic = data?.organic || []
+      let rankPosition = null
+      let rankUrl = null
+      for (let i = 0; i < organic.length; i++) {
+        const link = (organic[i].link || '').toLowerCase()
+        if (link.includes(domain)) {
+          rankPosition = organic[i].position || i + 1
+          rankUrl = organic[i].link
+          break
+        }
+      }
+      return { rankPosition, rankUrl, source: 'serper_api', organicResults: organic }
+    } catch {
+      /* fall through */
+    }
+  }
+
+  if (serpApiKey) {
+    try {
+      const url = `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(q)}&gl=in&hl=en&api_key=${encodeURIComponent(serpApiKey)}`
+      const res = await httpGet(url, { accept: 'application/json' })
+      const organic = res.json?.organic_results || []
+      let rankPosition = null
+      let rankUrl = null
+      for (let i = 0; i < organic.length; i++) {
+        const link = (organic[i].link || organic[i].url || '').toLowerCase()
+        if (link.includes(domain)) {
+          rankPosition = i + 1
+          rankUrl = organic[i].link || organic[i].url
+          break
+        }
+      }
+      return { rankPosition, rankUrl, source: 'serpapi', organicResults: organic }
+    } catch {
+      /* fall through */
+    }
+  }
+
+  const bingUrl = `https://www.bing.com/search?q=${encodeURIComponent(q)}&count=20&setlang=en`
+  const bing = await httpGet(bingUrl)
+  const organic = parseBingHtml(bing.text)
+  let rankPosition = null
+  let rankUrl = null
+  for (let i = 0; i < organic.length; i++) {
+    const link = (organic[i].link || '').toLowerCase()
+    if (link.includes(domain)) {
+      rankPosition = i + 1
+      rankUrl = organic[i].link
+      break
+    }
+  }
+  return { rankPosition, rankUrl, source: 'bing_free', organicResults: organic }
+}
+
 export async function collectKeywordCandidates(seeds, { max = 30 } = {}) {
   const found = new Set(seeds)
   for (const seed of seeds.slice(0, 6)) {
