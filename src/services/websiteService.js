@@ -1,7 +1,8 @@
-import { supabase } from '../supabaseClient'
-import { executeNativeAudit } from './nativeAuditEngine'
+import { supabase } from '../supabaseClient.js'
+import { executeNativeAudit } from './nativeAuditEngine.js'
 
-const SITE_NAME = import.meta.env.VITE_SITE_NAME || 'LifeSolveNow'
+const webEnv = (typeof import.meta !== 'undefined' && import.meta.env) || process?.env || {}
+const SITE_NAME = webEnv.VITE_SITE_NAME || 'LifeSolveNow'
 
 const WEBSITE_COLUMNS = 'id, url, status, site_name, created_at'
 

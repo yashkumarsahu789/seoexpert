@@ -1,15 +1,120 @@
-import { supabase } from '../supabaseClient'
-import { canonicalWebsiteUrl, websiteDomain } from './websiteService'
+import { supabase } from '../supabaseClient.js'
+import { canonicalWebsiteUrl, websiteDomain } from './websiteService.js'
 
+const envVars = (typeof import.meta !== 'undefined' && import.meta.env) || process?.env || {}
 const SERPER_KEY =
-  import.meta.env.VITE_SERPER_API_KEY ||
-  import.meta.env.SERPER_API_KEY ||
+  envVars.VITE_SERPER_API_KEY ||
+  envVars.SERPER_API_KEY ||
   '231506b3ec144d842cf349ccd47b4c4ecb35852b'
 
 const CORS_PROXIES = [
   (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
   (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
 ]
+
+/** Fetch Domain Creation Age via public RDAP gateway */
+export async function fetchDomainAge(domain) {
+  const d = String(domain || '').replace(/^www\./i, '').split('/')[0].trim()
+  if (!d || !d.includes('.')) return { ok: false, domain: d, ageLabel: 'Unknown' }
+
+  const tld = d.split('.').pop().toLowerCase()
+  const urls = []
+  if (tld === 'com' || tld === 'net') {
+    urls.push(`https://rdap.verisign.com/com/v1/domain/${encodeURIComponent(d)}`)
+  } else if (tld === 'org') {
+    urls.push(`https://rdap.publicinterestregistry.net/rdap/org/domain/${encodeURIComponent(d)}`)
+  }
+  urls.push(`https://rdap.org/domain/${encodeURIComponent(d)}`)
+
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, { headers: { Accept: 'application/rdap+json, application/json' } })
+      if (res.ok) {
+        const data = await res.json()
+        const events = data.events || []
+        const reg = events.find((e) => e.eventAction === 'registration') || events[0]
+        const created = reg?.eventDate
+        if (created) {
+          const createdDate = new Date(created)
+          const ageYears = Math.round(((Date.now() - createdDate.getTime()) / (365.25 * 24 * 3600 * 1000)) * 10) / 10
+          return {
+            ok: true,
+            domain: d,
+            created: String(created).split('T')[0],
+            ageYears,
+            ageLabel: ageYears >= 1 ? `${Math.round(ageYears)} Years Old` : `${Math.max(1, Math.round(ageYears * 12))} Months Old`,
+          }
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+  return { ok: false, domain: d, ageLabel: 'Unknown' }
+}
+
+/** Calculate Keyword Density and presence in title / H1 */
+export function calculateKeywordMetrics(text, title, h1, keyword) {
+  if (!keyword || !keyword.trim()) {
+    return { count: 0, density: 0, inTitle: false, inH1: false }
+  }
+  const kw = keyword.trim().toLowerCase()
+  const esc = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const lowerText = (text || '').toLowerCase()
+  const count = (lowerText.match(new RegExp(esc, 'g')) || []).length
+  const words = (text || '').split(/\s+/).filter(Boolean).length
+  const titleLower = (title || '').toLowerCase()
+  const h1Lower = (h1 || '').toLowerCase()
+
+  return {
+    count,
+    density: words ? Math.round((count / words) * 10000) / 100 : 0,
+    inTitle: titleLower.includes(kw),
+    inH1: h1Lower.includes(kw),
+  }
+}
+
+/** Parse Bing SERP HTML fallback */
+export function parseBingSerpHtml(html) {
+  const organic = []
+  const seen = new Set()
+  if (!html || typeof html !== 'string') return organic
+
+  const blocks = [...html.matchAll(/class="b_algo"[\s\S]*?(?=class="b_algo"|$)/gi)]
+  for (let i = 0; i < blocks.length; i++) {
+    const chunk = blocks[i][0]
+    let link = ''
+    const citeM = chunk.match(/class="b_attribution"[\s\S]*?<cite[^>]*>([\s\S]*?)<\/cite>/i)
+    if (citeM) {
+      link = citeM[1].replace(/<[^>]+>/g, '').replace(/\s*›\s*/g, '/').trim()
+      if (link && !/^https?:\/\//i.test(link)) link = `https://${link.replace(/^\/\//, '')}`
+    }
+    if (!link) {
+      const hrefM = chunk.match(/<h2[^>]*>\s*<a[^>]+href="([^"]+)"/i)
+      if (hrefM) link = hrefM[1].replace(/&amp;/g, '&')
+    }
+    const titleM = chunk.match(/<h2[^>]*>[\s\S]*?<a[^>]*>([\s\S]*?)<\/a>/i)
+    const title = titleM ? titleM[1].replace(/<[^>]+>/g, '').trim() : ''
+    const snippetM = chunk.match(/<p[^>]*>([\s\S]*?)<\/p>/i)
+    const snippet = snippetM ? snippetM[1].replace(/<[^>]+>/g, '').trim() : ''
+
+    if (link && link.startsWith('http') && !/bing\.|microsoft\.|msn\./i.test(link)) {
+      const norm = link.split(/[?#]/)[0]
+      if (!seen.has(norm)) {
+        seen.add(norm)
+        organic.push({
+          position: organic.length + 1,
+          link: norm,
+          url: norm,
+          title: title || norm,
+          snippet,
+        })
+      }
+    }
+  }
+  return organic
+}
 
 /** Fetch HTML with direct fetch and CORS proxy fallbacks */
 export async function fetchWebsiteHtml(url) {
@@ -421,76 +526,219 @@ export function extractKeywordSeeds(domain, onpage) {
   return [...seeds].slice(0, 4)
 }
 
-/** Query Serper API for Google search ranking positions */
+/** Query Serper API (or Bing free fallback) for Google search ranking positions */
 export async function checkKeywordRanksWithSerper(domain, keywords) {
   const rankResults = []
   const competitors = []
 
   for (const keyword of keywords) {
-    try {
-      const res = await fetch('https://google.serper.dev/search', {
-        method: 'POST',
-        headers: {
-          'X-API-KEY': SERPER_KEY,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ q: keyword, gl: 'in' }),
-      })
+    let organic = []
+    let source = 'Google (Serper)'
 
-      if (res.ok) {
-        const data = await res.json()
-        const organic = data.organic || []
-
-        let ourRank = null
-        let ourUrl = null
-
-        const cleanDomain = domain.toLowerCase().replace(/^www\./, '')
-        organic.forEach((item, index) => {
-          const itemLink = String(item.link || '').toLowerCase()
-          if (!ourRank && itemLink.includes(cleanDomain)) {
-            ourRank = index + 1
-            ourUrl = item.link
-          } else if (competitors.length < 5 && !itemLink.includes(cleanDomain)) {
-            competitors.push({
-              keyword,
-              competitor_url: item.link,
-              competitor_rank: index + 1,
-              title: item.title,
-              snippet: item.snippet,
-            })
-          }
-        })
-
-        rankResults.push({
-          keyword,
-          ourRank,
-          ourUrl,
-          rank_position: ourRank,
-          rank_url: ourUrl,
-          serpFeatures: {
-            source: 'Google (Serper)',
-            checked_at: new Date().toISOString(),
+    if (SERPER_KEY) {
+      try {
+        const res = await fetch('https://google.serper.dev/search', {
+          method: 'POST',
+          headers: {
+            'X-API-KEY': SERPER_KEY,
+            'Content-Type': 'application/json',
           },
+          body: JSON.stringify({ q: keyword, gl: 'in' }),
         })
-      } else {
-        rankResults.push({
+
+        if (res.ok) {
+          const data = await res.json()
+          organic = data.organic || []
+        }
+      } catch (err) {
+        console.warn('Serper request error:', err.message)
+      }
+    }
+
+    // Fallback to Bing SERP scrape if Serper API fails or is not configured
+    if (!organic || !organic.length) {
+      try {
+        source = 'Bing free scrape'
+        const bingUrl = `https://www.bing.com/search?q=${encodeURIComponent(keyword)}&count=20`
+        const bingHtml = await fetchWebsiteHtml(bingUrl)
+        organic = parseBingSerpHtml(bingHtml)
+      } catch (err) {
+        console.warn('Bing scrape error:', err.message)
+      }
+    }
+
+    let ourRank = null
+    let ourUrl = null
+
+    const cleanDomain = domain.toLowerCase().replace(/^www\./, '')
+    ;(organic || []).forEach((item, index) => {
+      const itemLink = String(item.link || item.url || '').toLowerCase()
+      if (!ourRank && itemLink.includes(cleanDomain)) {
+        ourRank = index + 1
+        ourUrl = item.link || item.url
+      } else if (competitors.length < 5 && itemLink && !itemLink.includes(cleanDomain)) {
+        competitors.push({
           keyword,
-          ourRank: null,
-          ourUrl: null,
-          serpFeatures: { source: 'Serper limited', error: res.status },
+          competitor_url: item.link || item.url,
+          competitor_rank: item.position || index + 1,
+          title: item.title || '',
+          snippet: item.snippet || '',
         })
       }
-    } catch (err) {
-      rankResults.push({
-        keyword,
-        ourRank: null,
-        ourUrl: null,
-        serpFeatures: { source: 'Rank check error', error: err.message },
-      })
-    }
+    })
+
+    rankResults.push({
+      keyword,
+      ourRank,
+      ourUrl,
+      rank_position: ourRank,
+      rank_url: ourUrl,
+      serpFeatures: {
+        source,
+        checked_at: new Date().toISOString(),
+      },
+    })
   }
 
   return { rankResults, competitors }
+}
+
+/** Enrich competitor URLs with page scraping, metric comparison, gaps, and domain age */
+export async function enrichCompetitorSnapshots({ domain, ourUrl, ourOnpage, ourHtml, ourFetchMs, rankResults, rawCompetitors, onProgress }) {
+  const ourDomainAge = await fetchDomainAge(domain)
+  const enrichedSnapshots = []
+
+  for (let i = 0; i < rawCompetitors.length; i++) {
+    const c = rawCompetitors[i]
+    const keyword = c.keyword
+    const compUrl = c.competitor_url
+    onProgress?.(`Scraping competitor #${c.competitor_rank} for "${keyword}" (${i + 1}/${rawCompetitors.length})…`)
+
+    let compHtml = ''
+    let compFetchMs = 0
+    const startMs = Date.now()
+    try {
+      compHtml = await fetchWebsiteHtml(compUrl)
+      compFetchMs = Date.now() - startMs
+    } catch {
+      compFetchMs = Date.now() - startMs
+    }
+
+    const compOnpage = compHtml ? parseOnPageHtml(compHtml, compUrl) : null
+    const compDomain = websiteDomain(compUrl)
+    const compDomainAge = await fetchDomainAge(compDomain)
+
+    // Calculate keyword metrics for target page and competitor page
+    const ourText = (ourOnpage.title || '') + ' ' + (ourOnpage.h1 || '') + ' ' + (ourOnpage.h2s || []).join(' ') + ' ' + (ourOnpage.h3s || []).join(' ')
+    const ourKwMetrics = calculateKeywordMetrics(ourText, ourOnpage.title, ourOnpage.h1, keyword)
+
+    const compText = compOnpage
+      ? (compOnpage.title || '') + ' ' + (compOnpage.h1 || '') + ' ' + (compOnpage.h2s || []).join(' ') + ' ' + (compOnpage.h3s || []).join(' ')
+      : (c.title || '') + ' ' + (c.snippet || '')
+    const compKwMetrics = calculateKeywordMetrics(compText, compOnpage?.title || c.title, compOnpage?.h1 || '', keyword)
+
+    const ourSetup = {
+      url: ourUrl,
+      pageTitle: ourOnpage.title || '',
+      wordCount: ourOnpage.wordCount || 0,
+      h2Count: ourOnpage.h2s ? ourOnpage.h2s.length : 0,
+      h3Count: ourOnpage.h3s ? ourOnpage.h3s.length : 0,
+      hasFaq: ourOnpage.hasFaqSchema || false,
+      hasTable: ourHtml ? /<table/i.test(ourHtml) : false,
+      hasSchema: Boolean(ourOnpage.schemas && ourOnpage.schemas.length),
+      hasVideo: ourHtml ? /<video|VideoObject/i.test(ourHtml) : false,
+      keywordMetrics: ourKwMetrics,
+      domainAge: ourDomainAge,
+      headings: { h1: ourOnpage.h1 ? [ourOnpage.h1] : [], h2: (ourOnpage.h2s || []).slice(0, 8), h3: (ourOnpage.h3s || []).slice(0, 6) },
+      altCount: ourOnpage.imagesTotal ? ourOnpage.imagesTotal - ourOnpage.imagesWithoutAlt : 0,
+      fetchMs: ourFetchMs || 180,
+    }
+
+    const theirSetup = {
+      url: compUrl,
+      title: c.title || '',
+      snippet: c.snippet || '',
+      pageTitle: compOnpage?.title || c.title || '',
+      wordCount: compOnpage?.wordCount || 0,
+      h2Count: compOnpage?.h2s ? compOnpage.h2s.length : 0,
+      h3Count: compOnpage?.h3s ? compOnpage.h3s.length : 0,
+      hasFaq: compOnpage?.hasFaqSchema || false,
+      hasTable: compHtml ? /<table/i.test(compHtml) : false,
+      hasSchema: Boolean(compOnpage?.schemas && compOnpage.schemas.length),
+      hasVideo: compHtml ? /<video|VideoObject/i.test(compHtml) : false,
+      keywordMetrics: compKwMetrics,
+      domainAge: compDomainAge,
+      headings: { h1: compOnpage?.h1 ? [compOnpage.h1] : [], h2: (compOnpage?.h2s || []).slice(0, 8), h3: (compOnpage?.h3s || []).slice(0, 6) },
+      altCount: compOnpage?.imagesTotal ? compOnpage.imagesTotal - compOnpage.imagesWithoutAlt : 0,
+      fetchMs: compFetchMs || 350,
+    }
+
+    const ourGaps = []
+    if (theirSetup.wordCount > ourSetup.wordCount + 300) {
+      ourGaps.push({ metric: 'word_count', ours: ourSetup.wordCount, theirs: theirSetup.wordCount })
+    }
+    if (theirSetup.h2Count > ourSetup.h2Count + 1) {
+      ourGaps.push({ metric: 'h2_count', ours: ourSetup.h2Count, theirs: theirSetup.h2Count })
+    }
+    if (theirSetup.hasFaq && !ourSetup.hasFaq) ourGaps.push({ metric: 'faq_schema', ours: false, theirs: true })
+    if (theirSetup.hasTable && !ourSetup.hasTable) ourGaps.push({ metric: 'table', ours: false, theirs: true })
+    if (theirSetup.hasSchema && !ourSetup.hasSchema) ourGaps.push({ metric: 'schema', ours: false, theirs: true })
+    if (theirSetup.hasVideo && !ourSetup.hasVideo) ourGaps.push({ metric: 'video', ours: false, theirs: true })
+    if (compKwMetrics.inTitle && !ourKwMetrics.inTitle) ourGaps.push({ metric: 'keyword_in_title', ours: false, theirs: true })
+    if (compKwMetrics.inH1 && !ourKwMetrics.inH1) ourGaps.push({ metric: 'keyword_in_h1', ours: false, theirs: true })
+    if ((compKwMetrics.density || 0) > (ourKwMetrics.density || 0) + 0.3) {
+      ourGaps.push({ metric: 'keyword_density', ours: ourKwMetrics.density, theirs: compKwMetrics.density })
+    }
+
+    const rankInfo = (rankResults || []).find((r) => r.keyword === keyword)
+    const ourRank = rankInfo?.ourRank ?? null
+
+    const comparison = {
+      keyword,
+      ourRank,
+      competitorRank: c.competitor_rank,
+      ourUrl,
+      competitorUrl: compUrl,
+      ourWordCount: ourSetup.wordCount,
+      compWordCount: theirSetup.wordCount,
+      ourH2: ourSetup.h2Count,
+      compH2: theirSetup.h2Count,
+      ourH3: ourSetup.h3Count,
+      compH3: theirSetup.h3Count,
+      ourKwDensity: ourKwMetrics.density,
+      compKwDensity: compKwMetrics.density,
+      ourDomainAge: ourDomainAge.ageLabel || 'Unknown',
+      compDomainAge: compDomainAge.ageLabel || 'Unknown',
+      ourKwInTitle: ourKwMetrics.inTitle,
+      compKwInTitle: compKwMetrics.inTitle,
+      ourKwInH1: ourKwMetrics.inH1,
+      compKwInH1: compKwMetrics.inH1,
+      ourHasFaq: ourSetup.hasFaq,
+      compHasFaq: theirSetup.hasFaq,
+      ourHasTable: ourSetup.hasTable,
+      compHasTable: theirSetup.hasTable,
+      ourHasSchema: ourSetup.hasSchema,
+      compHasSchema: theirSetup.hasSchema,
+      ourHasVideo: ourSetup.hasVideo,
+      compHasVideo: theirSetup.hasVideo,
+      ourAltCount: ourSetup.altCount,
+      compAltCount: theirSetup.altCount,
+    }
+
+    enrichedSnapshots.push({
+      keyword,
+      competitor_url: compUrl,
+      competitor_rank: c.competitor_rank,
+      our_rank: ourRank,
+      our_setup: ourSetup,
+      their_setup: { ...theirSetup, _our_setup: ourSetup, _comparison: comparison },
+      our_gaps: ourGaps,
+      comparison,
+      beat_plan: `Beat competitor #${c.competitor_rank} on "${keyword}" by expanding content depth (${theirSetup.wordCount} words vs ${ourSetup.wordCount} words) and optimizing headings.`,
+    })
+  }
+
+  return enrichedSnapshots
 }
 
 /** Build Action Plan from findings */
@@ -606,7 +854,9 @@ export async function executeNativeAudit({ websiteId, websiteUrl, mode = 'full',
   try {
     // 2. Fetch HTML
     onProgress?.(`Fetching website HTML for ${domain}…`)
+    const ourFetchStart = Date.now()
     const html = await fetchWebsiteHtml(url)
+    const ourFetchMs = Date.now() - ourFetchStart
 
     // 3. Technical & On-Page Parsing
     onProgress?.('Analyzing technical infrastructure, headings, and schema.org…')
@@ -702,7 +952,20 @@ export async function executeNativeAudit({ websiteId, websiteUrl, mode = 'full',
     const keywordSeeds = extractKeywordSeeds(domain, onpage)
     const { rankResults, competitors } = await checkKeywordRanksWithSerper(domain, keywordSeeds)
 
-    // 8. Build Action Plan & HTML Report
+    // 8. Competitor Scraping & Metrics Enrichment
+    onProgress?.('Scraping competitor pages and analyzing metric comparisons…')
+    const enrichedCompetitors = await enrichCompetitorSnapshots({
+      domain,
+      ourUrl: url,
+      ourOnpage: onpage,
+      ourHtml: html,
+      ourFetchMs,
+      rankResults,
+      rawCompetitors: competitors,
+      onProgress,
+    })
+
+    // 9. Build Action Plan & HTML Report
     const actionPlan = buildActionPlan(findingsRows)
     const reportHtml = generateHtmlReport({
       domain,
@@ -713,8 +976,8 @@ export async function executeNativeAudit({ websiteId, websiteUrl, mode = 'full',
       rankResults,
     })
 
-    // 9. Save Findings & Requirement Checks in Supabase
-    onProgress?.('Saving audit results and keyword rankings to database…')
+    // 10. Save Findings, Requirement Checks & Competitor Snapshots in Supabase
+    onProgress?.('Saving audit results and competitor data to database…')
     if (siteReqCheckRows.length > 0) {
       try {
         await supabase.from('site_requirement_checks').insert(siteReqCheckRows)
@@ -747,23 +1010,40 @@ export async function executeNativeAudit({ websiteId, websiteUrl, mode = 'full',
       }
     }
 
-    if (competitors.length > 0) {
+    if (enrichedCompetitors.length > 0) {
       try {
-        const compRows = competitors.map((c) => ({
+        const fullRows = enrichedCompetitors.map((s) => ({
           audit_run_id: auditRunId,
-          keyword: c.keyword,
-          competitor_url: c.competitor_url,
-          competitor_rank: c.competitor_rank,
-          their_setup: { title: c.title, snippet: c.snippet },
-          beat_plan: `Beat on ${c.keyword} by optimizing target headings, expanding content depth, and matching schema.org markup.`,
+          keyword: s.keyword,
+          competitor_url: s.competitor_url,
+          competitor_rank: s.competitor_rank,
+          our_rank: s.our_rank,
+          their_setup: s.their_setup,
+          our_setup: s.our_setup,
+          our_gaps: s.our_gaps,
+          beat_plan: s.beat_plan,
+          comparison: s.comparison,
         }))
-        await supabase.from('competitor_snapshots').insert(compRows)
+        const { error: compErr } = await supabase.from('competitor_snapshots').insert(fullRows)
+        if (compErr) {
+          const baseRows = enrichedCompetitors.map((s) => ({
+            audit_run_id: auditRunId,
+            keyword: s.keyword,
+            competitor_url: s.competitor_url,
+            competitor_rank: s.competitor_rank,
+            our_rank: s.our_rank,
+            their_setup: s.their_setup,
+            our_gaps: s.our_gaps,
+            beat_plan: s.beat_plan,
+          }))
+          await supabase.from('competitor_snapshots').insert(baseRows)
+        }
       } catch (e) {
         console.warn('competitor_snapshots insert warning:', e.message)
       }
     }
 
-    // 10. Update audit_runs to completed
+    // 11. Update audit_runs to completed
     const summaryData = {
       domain,
       url,
@@ -772,6 +1052,7 @@ export async function executeNativeAudit({ websiteId, websiteUrl, mode = 'full',
       rankResults,
       bestKeywords: keywordSeeds,
       actionPlan,
+      competitorSnapshots: enrichedCompetitors,
       completedAt: new Date().toISOString(),
     }
 
@@ -791,7 +1072,7 @@ export async function executeNativeAudit({ websiteId, websiteUrl, mode = 'full',
         summary: summaryData,
         technical,
         keywords: { rankResults, seeds: keywordSeeds },
-        competitors: { snapshots: competitors },
+        competitors: { snapshots: enrichedCompetitors },
         phase_seo: { score: s_seo, present: seoChecks.filter((c) => c.status === 'present').length },
         phase_aeo: { score: s_aeo, present: aeoChecks.filter((c) => c.status === 'present').length },
         phase_geo: { score: s_geo, present: geoChecks.filter((c) => c.status === 'present').length },
@@ -800,7 +1081,13 @@ export async function executeNativeAudit({ websiteId, websiteUrl, mode = 'full',
           notRanked: rankResults.filter((r) => r.ourRank == null).length,
           rankResults,
         },
-        phase_competitors: { count: competitors.length },
+        phase_competitors: {
+          count: enrichedCompetitors.length,
+          competitorsScraped: enrichedCompetitors.length,
+          keywordsAnalyzed: keywordSeeds.length,
+          compSource: SERPER_KEY ? 'serper_api' : 'bing_serp',
+          serpApiConfigured: Boolean(SERPER_KEY),
+        },
         completed_at: new Date().toISOString(),
       })
       .eq('id', auditRunId)
