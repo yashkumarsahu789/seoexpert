@@ -6,8 +6,19 @@ export function isN8nConfigured() {
   return Boolean(AUDIT_WEBHOOK?.trim())
 }
 
+function buildAuditWebhookUrl() {
+  const remote = (AUDIT_WEBHOOK || '').trim()
+  if (!remote) return ''
+  if (import.meta.env.DEV && !remote.startsWith('/')) {
+    const path = remote.replace(/^https?:\/\/[^/]+/, '')
+    return `/api/n8n${path}`
+  }
+  return remote
+}
+
 export async function triggerAuditWorkflow({ websiteId, websiteUrl, event, shop, ...extra }) {
-  if (!AUDIT_WEBHOOK?.trim()) {
+  const webhookUrl = buildAuditWebhookUrl()
+  if (!webhookUrl) {
     throw new Error('n8n audit webhook missing — VITE_N8N_AUDIT_WEBHOOK_URL set karo')
   }
 
@@ -22,11 +33,21 @@ export async function triggerAuditWorkflow({ websiteId, websiteUrl, event, shop,
     ...extra,
   }
 
-  const res = await fetch(AUDIT_WEBHOOK, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  })
+  let res
+  try {
+    res = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+  } catch (err) {
+    if (err.message === 'Failed to fetch' || err.name === 'TypeError') {
+      throw new Error(
+        'Audit server connect nahi ho saka ("Failed to fetch"). n8n dashboard (https://lifesolvenow.onrender.com) me "Website Audit" workflow ko Active (ON) karein ya Render wake hone ka 30s wait karein.'
+      )
+    }
+    throw err
+  }
 
   const text = await res.text()
   let data = null
@@ -37,6 +58,11 @@ export async function triggerAuditWorkflow({ websiteId, websiteUrl, event, shop,
   }
 
   if (!res.ok) {
+    if (res.status === 404) {
+      throw new Error(
+        'Audit webhook 404 — n8n dashboard (https://lifesolvenow.onrender.com) me "Website Audit" workflow open karke top-right me Active toggle ON karein.'
+      )
+    }
     const err = new Error(data?.message || `n8n webhook failed (${res.status})`)
     err.status = res.status
     throw err
