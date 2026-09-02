@@ -67,6 +67,7 @@ export default function App() {
             <Route path="ai-center" element={<AiCenterPage />} />
             <Route path="whatsapp" element={<WhatsAppAutomationPage />} />
             <Route path="workflows" element={<Navigate to="/automations" replace />} />
+            <Route path="keywords" element={<Navigate to="/audit/keywords" replace />} />
             <Route path="newfile/website_audit" element={<Navigate to="/audit" replace />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>

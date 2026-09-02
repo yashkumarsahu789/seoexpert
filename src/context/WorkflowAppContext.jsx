@@ -77,25 +77,21 @@ export function WorkflowAppProvider({ children }) {
       if (result.ok) {
         setKeepAliveOk(true)
         setKeepAliveError(null)
-        if (result.pingedAt && !result.corsFallback) {
+        if (result.pingedAt) {
           const pingIso = result.pingedAt.toISOString()
           setLastPingAt((prev) => pickNewerPing(prev, pingIso))
-          recordHeartbeat(result.data?.source || 'react_app')
-            .then((row) => {
-              const savedAt = row?.last_ping_at
-              if (savedAt) setLastPingAt((prev) => pickNewerPing(prev, savedAt))
-            })
-            .catch(() => {})
         }
+        recordHeartbeat(result.data?.source || 'react_app')
+          .then((row) => {
+            const savedAt = row?.last_ping_at
+            if (savedAt) setLastPingAt((prev) => pickNewerPing(prev, savedAt))
+          })
+          .catch(() => {})
         fetchHeartbeat()
           .then((hb) => {
             if (hb?.last_ping_at) {
               setLastPingAt((prev) => pickNewerPing(prev, hb.last_ping_at))
               setKeepAliveError(null)
-            } else if (result.corsFallback) {
-              setKeepAliveError(
-                'Wake ping bheja — lekin Supabase heartbeat nahi mila. Guard workflow n8n par active karo.'
-              )
             }
           })
           .catch(() => {})

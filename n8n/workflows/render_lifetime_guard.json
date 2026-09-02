@@ -137,7 +137,25 @@
       ],
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ { ok: true, status: 'alive', source: $('Build Heartbeat').item.json.source, pinged_at: $('Build Heartbeat').item.json.last_ping_at, instance: $('Build Heartbeat').item.json.instance_url } }}"
+        "responseBody": "={{ { ok: true, status: 'alive', source: $('Build Heartbeat').item.json.source, pinged_at: $('Build Heartbeat').item.json.last_ping_at, instance: $('Build Heartbeat').item.json.instance_url } }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "GET, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "*"
+              }
+            ]
+          }
+        }
       }
     },
     {

@@ -33,7 +33,7 @@ export function getKeepAliveWebhookUrl() {
   return KEEPALIVE_WEBHOOK
 }
 
-async function pingWithResponse(url, source) {
+async function pingWithResponse(url) {
   const res = await fetch(url, {
     method: 'GET',
   })
@@ -66,14 +66,36 @@ async function pingNoCors(url) {
   }
 }
 
+function isCrossOrigin(targetUrl) {
+  if (typeof window === 'undefined' || !window.location?.origin) return false
+  try {
+    const target = new URL(targetUrl, window.location.href)
+    return target.origin !== window.location.origin
+  } catch {
+    return false
+  }
+}
+
 export async function pingKeepAlive(source = 'react_app') {
   const url = buildPingUrl(source)
 
+  // In production cross-origin context (e.g. GitHub Pages -> Render),
+  // sending a standard CORS fetch to an endpoint without Access-Control-Allow-Origin
+  // causes the browser to forcefully log red CORS errors to the console.
+  // Using no-cors transmits the GET request to wake Render without triggering browser CORS blocks.
+  if (isCrossOrigin(url)) {
+    try {
+      return await pingNoCors(url)
+    } catch (err) {
+      return { status: 0, data: null, pingedAt: new Date(), error: err.message || 'Keep-alive ping failed' }
+    }
+  }
+
   try {
-    return await pingWithResponse(url, source)
+    return await pingWithResponse(url)
   } catch (err) {
     if (err.message === 'Failed to fetch' || err.name === 'TypeError') {
-      // Production: browser CORS block — request still reaches n8n to wake Render
+      // Production fallback: browser CORS block — request still reaches n8n to wake Render
       const remoteUrl = `${KEEPALIVE_WEBHOOK.replace(/\/$/, '')}?source=${encodeURIComponent(source)}`
       try {
         return await pingNoCors(remoteUrl)

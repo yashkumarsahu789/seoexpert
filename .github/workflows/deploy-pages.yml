@@ -57,7 +57,7 @@ jobs:
 
       - name: Prepare GitHub Pages artifact
         run: |
-          cp dist/index.html dist/404.html
+          if [ ! -f dist/404.html ]; then cp dist/index.html dist/404.html; fi
           touch dist/.nojekyll
 
       - name: Upload Pages artifact
