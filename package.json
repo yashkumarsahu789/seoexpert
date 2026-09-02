@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "audit:run": "node scripts/run-audit-native.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "n8n:check": "node scripts/n8n-sync.mjs check",

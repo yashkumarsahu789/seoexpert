@@ -1,5 +1,5 @@
 import { supabase } from '../supabaseClient'
-import { reportErrorToN8N, triggerAuditWorkflow } from './n8nService'
+import { executeNativeAudit } from './nativeAuditEngine'
 
 const SITE_NAME = import.meta.env.VITE_SITE_NAME || 'LifeSolveNow'
 
@@ -50,7 +50,7 @@ export async function findWebsiteByDomain(rawUrl) {
   return sites.find((s) => s.domain === domain) || null
 }
 
-export async function submitWebsite(rawUrl, { mode = 'full', wosAlpha, wosBeta, wosGamma } = {}) {
+export async function submitWebsite(rawUrl, { mode = 'full', onProgress } = {}) {
   const url = canonicalWebsiteUrl(rawUrl)
 
   const existing = await findWebsiteByDomain(rawUrl)
@@ -73,27 +73,17 @@ export async function submitWebsite(rawUrl, { mode = 'full', wosAlpha, wosBeta, 
 
   const site = withDomain(row)
 
-  try {
-    const result = await triggerAuditWorkflow({
-      websiteId: site.id,
-      websiteUrl: site.url,
-      mode,
-      wosAlpha,
-      wosBeta,
-      wosGamma,
-    })
-    return { ...site, auditRunId: result.auditRunId }
-  } catch (err) {
-    await reportErrorToN8N({
-      message: err.message,
-      websiteUrl: url,
-      statusCode: err.status || 500,
-    })
-    throw err
-  }
+  const result = await executeNativeAudit({
+    websiteId: site.id,
+    websiteUrl: site.url,
+    mode,
+    onProgress,
+  })
+
+  return { ...site, auditRunId: result.auditRunId, completedRun: result }
 }
 
-export async function reAuditWebsite(websiteId, { mode = 'full', wosAlpha, wosBeta, wosGamma } = {}) {
+export async function reAuditWebsite(websiteId, { mode = 'full', onProgress } = {}) {
   const { data: row, error } = await supabase
     .from('websites')
     .select(WEBSITE_COLUMNS)
@@ -110,16 +100,14 @@ export async function reAuditWebsite(websiteId, { mode = 'full', wosAlpha, wosBe
   if (updateError) throw updateError
 
   const site = withDomain(row)
-  const result = await triggerAuditWorkflow({
+  const result = await executeNativeAudit({
     websiteId: site.id,
     websiteUrl: site.url,
     mode,
-    wosAlpha,
-    wosBeta,
-    wosGamma,
+    onProgress,
   })
 
-  return { ...site, auditRunId: result.auditRunId }
+  return { ...site, auditRunId: result.auditRunId, completedRun: result }
 }
 
 export async function deleteWebsite(websiteId) {

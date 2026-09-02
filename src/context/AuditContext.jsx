@@ -99,14 +99,15 @@ export function AuditProvider({ children }) {
     if (!url?.trim()) return
     setSubmitting(true)
     setError(null)
-    setSuccessMsg(null)
+    setSuccessMsg('Audit start ho rahi hai…')
     try {
-      const row = await submitWebsite(url, { mode })
+      const row = await submitWebsite(url, {
+        mode,
+        onProgress: (msg) => setSuccessMsg(msg),
+      })
       if (row.auditRunId) {
-        setSuccessMsg('Audit chal rahi hai…')
-        const completed = await pollAuditRun(row.auditRunId, { maxAttempts: 120, intervalMs: 5000 })
-        await loadRunDetails({ id: completed.id })
-        setSuccessMsg(`Done — WOS ${completed.wos_score ?? '—'}`)
+        await loadRunDetails({ id: row.auditRunId })
+        setSuccessMsg(`Done — WOS ${row.completedRun?.wos_score ?? '—'}`)
       }
       await loadMeta()
       return row
@@ -125,12 +126,15 @@ export function AuditProvider({ children }) {
   async function reAudit(websiteId) {
     setSubmitting(true)
     setError(null)
+    setSuccessMsg('Re-audit shuru ho raha hai…')
     try {
-      const row = await reAuditWebsite(websiteId, { mode })
+      const row = await reAuditWebsite(websiteId, {
+        mode,
+        onProgress: (msg) => setSuccessMsg(msg),
+      })
       if (row.auditRunId) {
-        const completed = await pollAuditRun(row.auditRunId, { maxAttempts: 120, intervalMs: 5000 })
-        await loadRunDetails({ id: completed.id })
-        setSuccessMsg(`Re-audit done — WOS ${completed.wos_score ?? '—'}`)
+        await loadRunDetails({ id: row.auditRunId })
+        setSuccessMsg(`Re-audit done — WOS ${row.completedRun?.wos_score ?? '—'}`)
       }
       await loadMeta()
     } catch (err) {
