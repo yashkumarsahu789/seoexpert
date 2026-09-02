@@ -116,8 +116,7 @@ async function runCliAudit(rawUrl) {
       .from('websites')
       .insert({ url, site_name: 'LifeSolveNow', status: 'running' })
       .select('id')
-      .single()
-    websiteId = newSite?.id
+    websiteId = Array.isArray(newSite) ? newSite[0]?.id : newSite?.id
     console.log(`✓ Registered website ID: ${websiteId}`)
   }
 
