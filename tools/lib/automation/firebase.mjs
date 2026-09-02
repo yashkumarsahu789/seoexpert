@@ -1,3 +1,4 @@
+import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { TOOLS_ROOT } from './env.mjs'
@@ -38,11 +39,37 @@ export async function initFirebase(env) {
   return db
 }
 
+function readLocalRegistryPages() {
+  try {
+    const regPath = path.join(TOOLS_ROOT, 'public', 'pages', 'index.json')
+    if (existsSync(regPath)) {
+      const data = JSON.parse(readFileSync(regPath, 'utf8'))
+      return (data.pages || []).map((p) => ({
+        id: p.slug,
+        slug: p.slug,
+        keyword: p.keyword,
+        page_type: p.page_type || p.pageType,
+        path: p.route,
+        created_at: data.updated_at || new Date().toISOString(),
+        updated_at: data.updated_at || new Date().toISOString(),
+      }))
+    }
+  } catch (err) {
+    console.warn(`[firebase] Failed reading local registry (${err.message})`)
+  }
+  return []
+}
+
 export async function listKeywordPages(env, max = 500) {
-  const f = await initFirebase(env)
-  const q = f.query(f.collection(f.firestore, 'keyword_pages'), f.orderBy('updated_at', 'desc'), f.limit(max))
-  const snap = await f.getDocs(q)
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+  try {
+    const f = await initFirebase(env)
+    const q = f.query(f.collection(f.firestore, 'keyword_pages'), f.orderBy('updated_at', 'desc'), f.limit(max))
+    const snap = await f.getDocs(q)
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+  } catch (err) {
+    console.warn(`[firebase] Firestore list failed (${err.message}) — falling back to local registry`)
+    return readLocalRegistryPages()
+  }
 }
 
 export function pagesCreatedInLast24h(rows) {
@@ -54,15 +81,20 @@ export function pagesCreatedInLast24h(rows) {
 }
 
 export async function upsertKeywordPage(env, row) {
-  const f = await initFirebase(env)
-  const now = new Date().toISOString()
-  const ref = f.doc(f.firestore, 'keyword_pages', row.slug)
-  const existing = await f.getDoc(ref)
-  await f.setDoc(ref, {
-    ...row,
-    created_at: existing.exists() ? existing.data().created_at : now,
-    updated_at: now,
-    source: 'daily-automation',
-  })
-  return { slug: row.slug, created: !existing.exists() }
+  try {
+    const f = await initFirebase(env)
+    const now = new Date().toISOString()
+    const ref = f.doc(f.firestore, 'keyword_pages', row.slug)
+    const existing = await f.getDoc(ref)
+    await f.setDoc(ref, {
+      ...row,
+      created_at: existing.exists() ? existing.data().created_at : now,
+      updated_at: now,
+      source: 'daily-automation',
+    })
+    return { slug: row.slug, created: !existing.exists(), firestore: true }
+  } catch (err) {
+    console.warn(`[firebase] Firestore upsert skipped (${err.message}) — continuing with static registry`)
+    return { slug: row.slug, created: true, firestore: false }
+  }
 }

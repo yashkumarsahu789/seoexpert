@@ -52,6 +52,20 @@ jobs:
           KEYWORD_PAGES_DAILY_MAX: '1'
           VITE_KEYWORD_PAGES_PUBLIC_BASE: https://shop.LifeSolveNow.com/pages
           VITE_TOOLS_PUBLIC_URL: https://shop.LifeSolveNow.com
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          grok: ${{ secrets.GROQ_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          SERPER_API_KEY: ${{ secrets.SERPER_API_KEY }}
+          SERP_API_KEY: ${{ secrets.SERP_API_KEY }}
+          SAMBANOVA_API_KEY: ${{ secrets.SAMBANOVA_API_KEY }}
+          HUGGINGFACE_TOKEN: ${{ secrets.HUGGINGFACE_TOKEN }}
+          huggingface: ${{ secrets.HUGGINGFACE_TOKEN }}
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
         run: |
           ARGS=""
           [ "${{ inputs.dry_run }}" = "true" ] && ARGS="$ARGS --dry-run"

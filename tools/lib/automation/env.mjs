@@ -7,6 +7,16 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 export const TOOLS_ROOT = path.resolve(__dirname, '../..')
 export const REPO_ROOT = path.resolve(TOOLS_ROOT, '..')
 
+const DEFAULT_FIREBASE = {
+  VITE_FIREBASE_API_KEY: 'AIzaSyDuxCtAveHMxGcbAOmuc25IgKVT__4deTY',
+  VITE_FIREBASE_AUTH_DOMAIN: 'manager-fc26f.firebaseapp.com',
+  VITE_FIREBASE_PROJECT_ID: 'manager-fc26f',
+  VITE_FIREBASE_STORAGE_BUCKET: 'manager-fc26f.firebasestorage.app',
+  VITE_FIREBASE_MESSAGING_SENDER_ID: '534713538513',
+  VITE_FIREBASE_APP_ID: '1:534713538513:web:733bddf9ca23963a5e32f0',
+  VITE_FIREBASE_MEASUREMENT_ID: 'G-0HG93MWWTZ',
+}
+
 export function loadAutomationEnv() {
   const out = { ...process.env }
   const envPaths = [path.join(TOOLS_ROOT, '.env'), path.join(REPO_ROOT, '.env')]
@@ -22,6 +32,20 @@ export function loadAutomationEnv() {
       if (!out[key]) out[key] = val
     }
   }
+
+  // Fallbacks for Firebase client config
+  for (const [k, v] of Object.entries(DEFAULT_FIREBASE)) {
+    if (!out[k] || !out[k].trim()) {
+      out[k] = v
+    }
+  }
+
+  // Normalize aliases
+  if (!out.GROQ_API_KEY && out.grok) out.GROQ_API_KEY = out.grok
+  if (!out['sambanova.ai'] && out.SAMBANOVA_API_KEY) out['sambanova.ai'] = out.SAMBANOVA_API_KEY
+  if (!out.SAMBANOVA_API_KEY && out['sambanova.ai']) out.SAMBANOVA_API_KEY = out['sambanova.ai']
+  if (!out.SERPER_API_KEY && out.SERPer_API_KEY) out.SERPER_API_KEY = out.SERPer_API_KEY
+
   return out
 }
 

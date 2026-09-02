@@ -6,13 +6,19 @@
 const GEMINI_MODELS = new Set([
   'gemini-3.6-flash',
   'gemini-3.5-flash',
+  'gemini-2.5-flash',
   'gemini-flash-latest',
 ])
 
 const GROQ_MODELS = new Set([
+  'openai/gpt-oss-120b',
+  'openai/gpt-oss-20b',
+  'qwen/qwen3.6-27b',
+  'qwen/qwen3.8-27b',
+  'groq/compound',
+  'groq/compound-mini',
   'llama-3.3-70b-versatile',
-  'llama3-8b-8192',
-  'llama3-70b-8192',
+  'llama-3.1-8b-instant',
   'mixtral-8x7b-32768',
 ])
 
@@ -29,18 +35,36 @@ const CF_MODEL_MAP = {
 
 const FALLBACK_CHAIN = [
   'gemini-gemini-3.6-flash',
+  'gemini-gemini-2.5-flash',
   'gemini-gemini-flash-latest',
+  'groq-openai/gpt-oss-120b',
+  'groq-openai/gpt-oss-20b',
+  'groq-qwen/qwen3.6-27b',
   'groq-llama-3.3-70b-versatile',
-  'groq-llama3-8b-8192',
+  'groq-llama-3.1-8b-instant',
   'sambanova-Meta-Llama-3.1-70B-Instruct',
   'hf-mistralai/Mistral-7B-Instruct-v0.3',
   'cf-llama',
   'cf-glm',
 ]
 
+const LEAKED_GEMINI_KEY = 'AIzaSyA17o8Gl4P8-xGf5IL9SBOFEEZPN-zMkko'
+
 export function loadLlmEnv(env = process.env) {
+  const geminiCandidates = [
+    env.GEMINI_API_KEY,
+    env.GEMINI_API_KEY6,
+    env.GEMINI_API_KEY5,
+    env.GEMINI_API_KEY4,
+    env.VITE_GEMINI_API_KEY,
+  ]
+    .map((k) => (k || '').trim())
+    .filter((k) => k && k !== LEAKED_GEMINI_KEY)
+
+  const geminiKey = geminiCandidates[0] || (env.GEMINI_API_KEY || '').trim()
+
   return {
-    gemini: (env.GEMINI_API_KEY || env.GEMINI_API_KEY5 || env.GEMINI_API_KEY4 || env.VITE_GEMINI_API_KEY || 'AIzaSyA17o8Gl4P8-xGf5IL9SBOFEEZPN-zMkko').trim(),
+    gemini: geminiKey,
     groq: (env.grok || env.GROQ_API_KEY || '').trim(),
     sambanova: (env['sambanova.ai'] || env.SAMBANOVA_API_KEY || '').trim(),
     huggingface: (env.huggingface || env.HUGGINGFACE_TOKEN || '').trim(),
@@ -109,6 +133,11 @@ export function pickLlmRoute(preferredAgentId, creds, preferredList = []) {
   return null
 }
 
+function cleanLlmText(text) {
+  if (!text || typeof text !== 'string') return ''
+  return text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim()
+}
+
 async function callGemini(apiKey, model, prompt, maxTokens) {
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
@@ -123,7 +152,8 @@ async function callGemini(apiKey, model, prompt, maxTokens) {
   )
   const data = await res.json()
   if (!res.ok) throw new Error(data?.error?.message || `Gemini HTTP ${res.status}`)
-  return data?.candidates?.[0]?.content?.parts?.[0]?.text || ''
+  const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || ''
+  return cleanLlmText(raw)
 }
 
 async function callGroq(apiKey, model, prompt, maxTokens) {
@@ -142,7 +172,8 @@ async function callGroq(apiKey, model, prompt, maxTokens) {
   })
   const data = await res.json()
   if (!res.ok) throw new Error(data?.error?.message || `Groq HTTP ${res.status}`)
-  return data?.choices?.[0]?.message?.content || ''
+  const raw = data?.choices?.[0]?.message?.content || ''
+  return cleanLlmText(raw)
 }
 
 async function callSambanova(apiKey, model, prompt, maxTokens) {

@@ -202,7 +202,7 @@ async function main() {
         slug: config.slug,
         pageType: config.pageType,
         theme: config.theme?.id,
-        usedAi: useAi,
+        usedAi: usedAi,
         publicUrl: row.public_url,
         liveRoute: `${cfg.appPublicBase}/p/${config.slug}`,
         purpose: intelligence?.brief?.purpose || null,
