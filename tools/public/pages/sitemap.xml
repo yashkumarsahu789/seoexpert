@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://shop.LifeSolveNow.com/pages/online-calculator.html</loc>
-    <lastmod>2026-06-24</lastmod>
+    <loc>https://shop.LifeSolveNow.com/pages/free-calculator</loc>
+    <lastmod>2026-09-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://shop.LifeSolveNow.com/pages/online-calculator</loc>
+    <lastmod>2026-09-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>

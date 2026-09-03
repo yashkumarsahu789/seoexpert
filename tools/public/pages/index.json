@@ -1,11 +1,20 @@
 {
-  "updated_at": "2026-06-24T10:59:23.144Z",
+  "updated_at": "2026-09-03T07:16:25.116Z",
+  "source": "daily-automation",
   "pages": [
+    {
+      "slug": "free-calculator",
+      "keyword": "free calculator",
+      "page_type": "tool",
+      "route": "/p/free-calculator",
+      "public_url": "https://shop.LifeSolveNow.com/pages/free-calculator"
+    },
     {
       "slug": "online-calculator",
       "keyword": "online calculator",
       "page_type": "tool",
-      "route": "/p/online-calculator"
+      "route": "/p/online-calculator",
+      "public_url": "https://shop.LifeSolveNow.com/pages/online-calculator"
     }
   ]
 }
