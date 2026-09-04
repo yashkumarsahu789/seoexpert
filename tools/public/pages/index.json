@@ -1,7 +1,14 @@
 {
-  "updated_at": "2026-09-03T07:16:25.116Z",
+  "updated_at": "2026-09-04T07:25:31.738Z",
   "source": "daily-automation",
   "pages": [
+    {
+      "slug": "bmi-calculator",
+      "keyword": "bmi calculator",
+      "page_type": "tool",
+      "route": "/p/bmi-calculator",
+      "public_url": "https://shop.LifeSolveNow.com/pages/bmi-calculator"
+    },
     {
       "slug": "free-calculator",
       "keyword": "free calculator",
