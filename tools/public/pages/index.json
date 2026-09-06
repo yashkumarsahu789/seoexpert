@@ -1,7 +1,14 @@
 {
-  "updated_at": "2026-09-04T07:25:31.738Z",
+  "updated_at": "2026-09-06T07:12:49.462Z",
   "source": "daily-automation",
   "pages": [
+    {
+      "slug": "password-generator",
+      "keyword": "password generator",
+      "page_type": "tool",
+      "route": "/p/password-generator",
+      "public_url": "https://shop.LifeSolveNow.com/pages/password-generator"
+    },
     {
       "slug": "bmi-calculator",
       "keyword": "bmi calculator",
