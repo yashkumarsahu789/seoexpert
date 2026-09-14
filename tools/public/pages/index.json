@@ -1,7 +1,14 @@
 {
-  "updated_at": "2026-09-13T07:32:46.945Z",
+  "updated_at": "2026-09-14T07:59:29.736Z",
   "source": "daily-automation",
   "pages": [
+    {
+      "slug": "youtube",
+      "keyword": "youtube",
+      "page_type": "brand",
+      "route": "/p/youtube",
+      "public_url": "https://shop.LifeSolveNow.com/pages/youtube"
+    },
     {
       "slug": "whatsapp-web",
       "keyword": "whatsapp web",
