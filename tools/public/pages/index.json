@@ -1,7 +1,14 @@
 {
-  "updated_at": "2026-09-14T07:59:29.736Z",
+  "updated_at": "2026-09-16T07:47:26.251Z",
   "source": "daily-automation",
   "pages": [
+    {
+      "slug": "amazon-india",
+      "keyword": "amazon india",
+      "page_type": "brand",
+      "route": "/p/amazon-india",
+      "public_url": "https://shop.LifeSolveNow.com/pages/amazon-india"
+    },
     {
       "slug": "youtube",
       "keyword": "youtube",
