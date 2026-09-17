@@ -1,7 +1,14 @@
 {
-  "updated_at": "2026-09-16T07:47:26.251Z",
+  "updated_at": "2026-09-17T07:51:15.181Z",
   "source": "daily-automation",
   "pages": [
+    {
+      "slug": "flipkart-online-shopping",
+      "keyword": "flipkart online shopping",
+      "page_type": "brand",
+      "route": "/p/flipkart-online-shopping",
+      "public_url": "https://shop.LifeSolveNow.com/pages/flipkart-online-shopping"
+    },
     {
       "slug": "amazon-india",
       "keyword": "amazon india",
