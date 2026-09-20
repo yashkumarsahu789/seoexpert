@@ -1,7 +1,14 @@
 {
-  "updated_at": "2026-09-19T07:25:44.982Z",
+  "updated_at": "2026-09-20T07:49:54.029Z",
   "source": "daily-automation",
   "pages": [
+    {
+      "slug": "spotify-web-player",
+      "keyword": "spotify web player",
+      "page_type": "brand",
+      "route": "/p/spotify-web-player",
+      "public_url": "https://shop.LifeSolveNow.com/pages/spotify-web-player"
+    },
     {
       "slug": "netflix-login",
       "keyword": "netflix login",
