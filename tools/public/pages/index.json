@@ -1,7 +1,14 @@
 {
-  "updated_at": "2026-09-28T08:49:33.947Z",
+  "updated_at": "2026-09-30T08:46:46.223Z",
   "source": "daily-automation",
   "pages": [
+    {
+      "slug": "online-calculator-simple",
+      "keyword": "online calculator simple",
+      "page_type": "tool",
+      "route": "/p/online-calculator-simple",
+      "public_url": "https://shop.LifeSolveNow.com/pages/online-calculator-simple"
+    },
     {
       "slug": "online-calculator-ti-84",
       "keyword": "online calculator ti 84",
